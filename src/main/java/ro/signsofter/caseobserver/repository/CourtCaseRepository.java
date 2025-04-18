@@ -10,4 +10,5 @@ import java.util.Optional;
 public interface CourtCaseRepository extends JpaRepository<CourtCase, Long> {
 
     Optional<CourtCase> findByCaseId(String caseId);
+    boolean existsByCaseId(String caseId);
 }

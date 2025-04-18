@@ -2,6 +2,7 @@ package ro.signsofter.caseobserver.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ro.signsofter.caseobserver.controller.dto.CreateCaseRequestDto;
 import ro.signsofter.caseobserver.entity.CourtCase;
 import ro.signsofter.caseobserver.repository.CourtCaseRepository;
 
@@ -22,7 +23,19 @@ public class CourtCaseService {
         return courtCaseRepository.findById(id);
     }
 
-    public CourtCase createCase(CourtCase courtCase) {
+    public CourtCase createCase(CreateCaseRequestDto request) {
+        // Check if case already exists
+        if (courtCaseRepository.existsByCaseId(request.getCaseId())) {
+            throw new IllegalArgumentException("Case with ID " + request.getCaseId() + " already exists");
+        }
+
+        // Map DTO to entity
+        CourtCase courtCase = new CourtCase();
+        courtCase.setCaseId(request.getCaseId());
+        courtCase.setCaseName(request.getCaseName());
+        courtCase.setCourtName(request.getCourtName());
+        courtCase.setStatus(request.getStatus());
+
         return courtCaseRepository.save(courtCase);
     }
 
