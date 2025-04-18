@@ -31,8 +31,10 @@ CREATE TABLE court_case
 -- User-Case Relationship Table
 CREATE TABLE user_case
 (
-    user_id  BIGINT NOT NULL,
-    case_id  BIGINT NOT NULL,
+    user_id       BIGINT NOT NULL,
+    case_id       BIGINT NOT NULL,
+    custom_title  VARCHAR(255),
+    notes         TEXT,
     PRIMARY KEY (user_id, case_id),
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
     FOREIGN KEY (case_id) REFERENCES court_case (id) ON DELETE CASCADE,

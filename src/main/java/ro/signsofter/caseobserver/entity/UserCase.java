@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
@@ -21,6 +22,15 @@ public class UserCase {
     @MapsId("caseId")
     @JoinColumn(name = "case_id", nullable = false)
     private CourtCase courtCase;
+
+    @Column(name = "custom_title")
+    private String customTitle;
+
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    @Column(name = "monitoring_started_at")
+    private LocalDateTime monitoringStartedAt;
 
     @Embeddable
     @Data
