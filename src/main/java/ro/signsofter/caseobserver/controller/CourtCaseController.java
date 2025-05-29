@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ro.signsofter.caseobserver.controller.dto.CreateCaseRequestDto;
 import ro.signsofter.caseobserver.entity.CourtCase;
+import ro.signsofter.caseobserver.exception.portal.PortalQueryException;
 import ro.signsofter.caseobserver.service.CourtCaseService;
 
 @RestController
@@ -24,8 +25,15 @@ public class CourtCaseController {
     public ResponseEntity<?> createCase(@Valid @RequestBody CreateCaseRequestDto request) {
         try {
             CourtCase createdCase = courtCaseService.createCase(request);
+
+            if  (null == request.getUser()) {
+                return ResponseEntity.status(HttpStatus.CREATED).body(createdCase);
+            }
+
+            courtCaseService.saveUserCase(request.getUser(), createdCase);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(createdCase);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | PortalQueryException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
