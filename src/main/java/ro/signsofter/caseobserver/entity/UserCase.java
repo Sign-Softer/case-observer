@@ -10,8 +10,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "user_case")
 public class UserCase {
+
     @EmbeddedId
-    private UserCaseId id;
+    private UserCaseId id = new UserCaseId();
 
     @ManyToOne
     @MapsId("userId")
@@ -19,7 +20,7 @@ public class UserCase {
     private User user;
 
     @ManyToOne
-    @MapsId("caseId")
+    @MapsId("courtCaseId")
     @JoinColumn(name = "case_id", nullable = false)
     private CourtCase courtCase;
 
@@ -32,11 +33,12 @@ public class UserCase {
     @Column(name = "monitoring_started_at")
     private LocalDateTime monitoringStartedAt;
 
+
     @Embeddable
     @Data
     public static class UserCaseId implements Serializable {
         private Long userId;
-        private Long caseId;
+        private Long courtCaseId;
     }
 }
 

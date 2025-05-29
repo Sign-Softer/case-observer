@@ -2,6 +2,7 @@ package ro.signsofter.caseobserver.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -26,5 +27,6 @@ public class Notification {
     private String message;
 
     @Column(name = "sent_at", nullable = false)
-    private LocalDateTime sentAt = LocalDateTime.now();
+    @CreationTimestamp
+    private LocalDateTime sentAt;
 }

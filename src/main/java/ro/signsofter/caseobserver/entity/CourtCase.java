@@ -1,10 +1,13 @@
 package ro.signsofter.caseobserver.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -15,12 +18,29 @@ public class CourtCase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "case_id", nullable = false, unique = true)
-    private String  caseId;
+    @Column(name = "number", nullable = false, unique = true)
+    private String caseNumber;
 
-    @Column(name = "case_name")
-    private String caseName;
+    @Column(name = "imposed_name")
+    private String imposedName;
 
+    // use enum
+    @Column(name = "department")
+    private String department;
+
+    // use enum
+    @Column(name = "procedural_stage")
+    private String proceduralStage;
+
+    // TODO use enum
+    @Column(name = "category")
+    private String category;
+
+    // TODO use enum
+    @Column(name = "subject")
+    private String subject;
+
+    // use enum
     @Column(name = "court_name")
     private String courtName;
 
@@ -33,4 +53,8 @@ public class CourtCase {
 
     @Column(name = "monitoring_enabled", nullable = false)
     private Boolean monitoringEnabled = true;
+
+    @OneToMany(mappedBy = "courtCase", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Hearing> hearings = new ArrayList<>();
 }

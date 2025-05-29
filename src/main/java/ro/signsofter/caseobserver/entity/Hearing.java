@@ -1,5 +1,6 @@
 package ro.signsofter.caseobserver.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,14 +17,21 @@ public class Hearing {
 
     @ManyToOne
     @JoinColumn(name = "case_id", nullable = false)
+    @JsonBackReference
     private CourtCase courtCase;
 
-    @Column(name = "hearing_date", nullable = false)
-    private LocalDateTime hearingDate;
+    @Column(name = "judicial_panel")
+    private String judicialPanel;
 
     @Column(name = "solution")
     private String solution;
 
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "hearing_date", nullable = false)
+    private LocalDateTime hearingDate;
+
+    @Column(name = "pronouncement_date", nullable = false)
+    private LocalDateTime pronouncementDate;
 }

@@ -10,7 +10,7 @@ CREATE TABLE user
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     is_active  BOOLEAN DEFAULT TRUE,
-    role       ENUM('admin', 'user') DEFAULT 'user',
+    role       ENUM('ADMIN', 'USER') DEFAULT 'USER',
     INDEX idx_username (username),
     INDEX idx_email (email)
 );
@@ -19,13 +19,17 @@ CREATE TABLE user
 CREATE TABLE court_case
 (
     id                 BIGINT AUTO_INCREMENT PRIMARY KEY,
-    case_id            VARCHAR(255) NOT NULL UNIQUE, -- Unique identifier for the case (e.g., id_dosar)
-    case_name          VARCHAR(255),                 -- Optional human-readable name
+    number        VARCHAR(255) NOT NULL UNIQUE, -- Unique identifier for the case (e.g., id_dosar)
+    imposed_name       VARCHAR(255),                 -- Optional human-readable name
     court_name         VARCHAR(255),                 -- Name of the court
+    department         VARCHAR(255),
+    procedural_stage   VARCHAR(255),
+    category           VARCHAR(255),
+    subject            VARCHAR(255),
     status             VARCHAR(255),                 -- Current status of the case
     last_updated       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     monitoring_enabled BOOLEAN DEFAULT TRUE,          -- Whether the case is being monitored
-    INDEX idx_case_id (case_id)
+    INDEX idx_case_id (number)
 );
 
 -- User-Case Relationship Table
@@ -35,6 +39,7 @@ CREATE TABLE user_case
     case_id       BIGINT NOT NULL,
     custom_title  VARCHAR(255),
     notes         TEXT,
+    monitoring_started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (user_id, case_id),
     FOREIGN KEY (user_id) REFERENCES user (id) ON DELETE CASCADE,
     FOREIGN KEY (case_id) REFERENCES court_case (id) ON DELETE CASCADE,
@@ -47,9 +52,11 @@ CREATE TABLE hearing
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     case_id     BIGINT NOT NULL,
-    hearing_date TIMESTAMP NOT NULL,
+    judicial_panel VARCHAR(255),
     solution    VARCHAR(255),
     description TEXT,
+    hearing_date TIMESTAMP NOT NULL,
+    pronouncement_date TIMESTAMP NOT NULL,
     FOREIGN KEY (case_id) REFERENCES court_case (id) ON DELETE CASCADE,
     INDEX idx_case_id (case_id)
 );
