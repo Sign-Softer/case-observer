@@ -5,10 +5,10 @@ import lombok.Data;
 
 @Data
 public class CreateCaseRequestDto {
-    @NotBlank(message = "Case ID is required")
-    private String caseId;
-
+    @NotBlank(message = "Case number is required")
+    private String caseNumber;
+    @NotBlank(message = "Case institution is required")
+    private String institution;
     private String caseName;
-    private String courtName;
-    private String status;
+    private String user;
 }
