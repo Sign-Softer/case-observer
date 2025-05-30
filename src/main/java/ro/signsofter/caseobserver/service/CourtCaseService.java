@@ -3,10 +3,7 @@ package ro.signsofter.caseobserver.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ro.signsofter.caseobserver.controller.dto.CreateCaseRequestDto;
-import ro.signsofter.caseobserver.entity.CourtCase;
-import ro.signsofter.caseobserver.entity.Hearing;
-import ro.signsofter.caseobserver.entity.User;
-import ro.signsofter.caseobserver.entity.UserCase;
+import ro.signsofter.caseobserver.entity.*;
 import ro.signsofter.caseobserver.exception.portal.PortalQueryException;
 import ro.signsofter.caseobserver.external.PortalQueryService;
 import ro.signsofter.caseobserver.external.dto.caseResponse.CaseDetailsDto;
@@ -82,7 +79,19 @@ public class CourtCaseService {
                 })
                 .collect(Collectors.toList());
 
+        List<Party> parties = externalData.getParties().stream()
+                .map(p -> {
+                    Party party = new Party();
+                    party.setCourtCase(courtCase);
+                    party.setName(p.getName());
+                    party.setRole(p.getRole());
+
+                    return party;
+                })
+                .collect(Collectors.toList());
+
         courtCase.setHearings(hearings);
+        courtCase.setParties(parties);
 
         return courtCaseRepository.save(courtCase);
     }
