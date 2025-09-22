@@ -106,19 +106,6 @@ public class CourtCaseService {
         userCaseRepository.save(userCase);
     }
 
-    public CourtCase updateCase(Long id, CourtCase caseDetails) {
-        CourtCase courtCase = courtCaseRepository.findById(id).orElseThrow(() -> new RuntimeException("Case not found"));
-        courtCase.setCaseNumber(caseDetails.getCaseNumber());
-        courtCase.setImposedName(caseDetails.getImposedName());
-        courtCase.setCourtName(caseDetails.getCourtName());
-        courtCase.setStatus(caseDetails.getStatus());
-        return courtCaseRepository.save(courtCase);
-    }
-
-    public void deleteCase(Long id) {
-        courtCaseRepository.deleteById(id);
-    }
-
     private LocalDateTime parseDate(String rawDate, String rawTime) {
         try {
             // If rawDate is a full ISO datetime
@@ -131,5 +118,71 @@ public class CourtCaseService {
         } catch (DateTimeParseException e) {
             throw new IllegalArgumentException("Failed to parse date/time: " + rawDate + " " + rawTime, e);
         }
+    }
+
+    public CaseDetailsDto fetchCaseDetailsFromPortal(String caseNumber, String institution) throws PortalQueryException {
+        return portalQueryService.fetchCaseDetails(caseNumber, institution);
+    }
+
+    // Refetch data from portal and update saved case
+    public CourtCase refetchAndUpdateCase(Long id) throws PortalQueryException {
+        CourtCase existingCase = courtCaseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Case not found with id " + id));
+
+        CaseDetailsDto externalData = portalQueryService.fetchCaseDetails(existingCase.getCaseNumber(), existingCase.getCourtName());
+
+        if (externalData == null || externalData.getNumber() == null) {
+            throw new IllegalArgumentException("Failed to fetch case data from portal");
+        }
+
+        // Update fields (similar to createCase)
+        existingCase.setStatus(externalData.getProceduralStage());
+        existingCase.setCategory(externalData.getCaseCategory());
+        existingCase.setDepartment(externalData.getDepartment());
+        existingCase.setSubject(externalData.getSubject());
+        existingCase.setProceduralStage(externalData.getProceduralStage());
+
+        // TODO: Update hearings and parties if needed
+
+        return courtCaseRepository.save(existingCase);
+    }
+
+    // Activate monitoring with notification interval
+    public CourtCase activateMonitoring(Long id, int notificationIntervalMinutes) {
+        if (notificationIntervalMinutes <= 0) {
+            throw new IllegalArgumentException("Notification interval must be positive");
+        }
+
+        CourtCase courtCase = courtCaseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Case not found with id " + id));
+
+        courtCase.setMonitoringEnabled(true);
+
+        // TODO: Save notification interval in notification settings entity or related config
+
+        return courtCaseRepository.save(courtCase);
+    }
+
+    // Deactivate monitoring
+    public CourtCase deactivateMonitoring(Long id) {
+        CourtCase courtCase = courtCaseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Case not found with id " + id));
+
+        courtCase.setMonitoringEnabled(false);
+
+        return courtCaseRepository.save(courtCase);
+    }
+
+    // Update notification settings (interval, custom name)
+    public CourtCase updateNotificationSettings(Long id, Integer notificationIntervalMinutes, String customName) {
+        CourtCase courtCase = courtCaseRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Case not found with id " + id));
+
+        // TODO: Update notification interval and custom name in notification settings entity or related config
+        // For now, just a placeholder
+
+        // Example: if you have a NotificationSettings entity linked to CourtCase, update it here
+
+        return courtCaseRepository.save(courtCase);
     }
 }
