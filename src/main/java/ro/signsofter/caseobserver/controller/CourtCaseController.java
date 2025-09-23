@@ -32,77 +32,48 @@ public class CourtCaseController {
     
 
     @PostMapping
-    public ResponseEntity<?> createCase(@Valid @RequestBody CreateCaseRequestDto request) {
-        try {
-            CourtCase createdCase = courtCaseService.createCase(request);
-
-            if  (null == request.getUser()) {
-                return ResponseEntity.ok(CourtCaseMapper.toDto(createdCase));
-            }
-
+    public ResponseEntity<CourtCaseResponseDto> createCase(@Valid @RequestBody CreateCaseRequestDto request) throws PortalQueryException {
+        CourtCase createdCase = courtCaseService.createCase(request);
+        if (request.getUser() != null) {
             courtCaseService.saveUserCase(request.getUser(), createdCase);
-
-            return ResponseEntity.ok(CourtCaseMapper.toDto(createdCase));
-        } catch (IllegalArgumentException | PortalQueryException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
         }
+        return ResponseEntity.ok(CourtCaseMapper.toDto(createdCase));
     }
 
     // 1. Fetch case data from portal without saving
     @GetMapping("/fetch")
-    public ResponseEntity<?> fetchCaseData(@RequestParam String caseNumber, @RequestParam String institution) {
-        try {
-            CaseDetailsDto caseDetails = courtCaseService.fetchCaseDetailsFromPortal(caseNumber, institution);
-            return ResponseEntity.ok(caseDetails);
-        } catch (PortalQueryException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<CaseDetailsDto> fetchCaseData(@RequestParam String caseNumber, @RequestParam String institution) throws PortalQueryException {
+        CaseDetailsDto caseDetails = courtCaseService.fetchCaseDetailsFromPortal(caseNumber, institution);
+        return ResponseEntity.ok(caseDetails);
     }
 
     // 2. Refetch and update saved case data
     @PostMapping("/{id}/refetch")
-    public ResponseEntity<?> refetchAndUpdateCase(@PathVariable Long id) {
-        try {
-            CourtCase updatedCase = courtCaseService.refetchAndUpdateCase(id);
-            return ResponseEntity.ok(updatedCase);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-
-        }
+    public ResponseEntity<CourtCaseResponseDto> refetchAndUpdateCase(@PathVariable Long id) throws PortalQueryException {
+        CourtCase updatedCase = courtCaseService.refetchAndUpdateCase(id);
+        return ResponseEntity.ok(CourtCaseMapper.toDto(updatedCase));
     }
 
     // 3. Activate monitoring on case with notification interval
     @PostMapping("/{id}/monitoring/activate")
-    public ResponseEntity<?> activateMonitoring(@PathVariable Long id, @RequestParam int notificationIntervalMinutes) {
-        try {
-            CourtCase updatedCase = courtCaseService.activateMonitoring(id, notificationIntervalMinutes);
-            return ResponseEntity.ok(updatedCase);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<CourtCaseResponseDto> activateMonitoring(@PathVariable Long id, @RequestParam int notificationIntervalMinutes) {
+        CourtCase updatedCase = courtCaseService.activateMonitoring(id, notificationIntervalMinutes);
+        return ResponseEntity.ok(CourtCaseMapper.toDto(updatedCase));
     }
 
     // 4. Deactivate monitoring on case
     @PostMapping("/{id}/monitoring/deactivate")
-    public ResponseEntity<?> deactivateMonitoring(@PathVariable Long id) {
-        try {
-            CourtCase updatedCase = courtCaseService.deactivateMonitoring(id);
-            return ResponseEntity.ok(updatedCase);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+    public ResponseEntity<CourtCaseResponseDto> deactivateMonitoring(@PathVariable Long id) {
+        CourtCase updatedCase = courtCaseService.deactivateMonitoring(id);
+        return ResponseEntity.ok(CourtCaseMapper.toDto(updatedCase));
     }
 
     // 5. Update notification settings (interval, custom name)
     @PutMapping("/{id}/notification-settings")
-    public ResponseEntity<?> updateNotificationSettings(@PathVariable Long id,
+    public ResponseEntity<CourtCaseResponseDto> updateNotificationSettings(@PathVariable Long id,
                                                         @RequestParam(required = false) Integer notificationIntervalMinutes,
                                                         @RequestParam(required = false) String customName) {
-        try {
-            CourtCase updatedCase = courtCaseService.updateNotificationSettings(id, notificationIntervalMinutes, customName);
-            return ResponseEntity.ok(updatedCase);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+        CourtCase updatedCase = courtCaseService.updateNotificationSettings(id, notificationIntervalMinutes, customName);
+        return ResponseEntity.ok(CourtCaseMapper.toDto(updatedCase));
     }
 }
