@@ -1,14 +1,17 @@
 package ro.signsofter.caseobserver.controller;
 
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ro.signsofter.caseobserver.controller.dto.CourtCaseResponseDto;
 import ro.signsofter.caseobserver.controller.dto.CreateCaseRequestDto;
+import ro.signsofter.caseobserver.controller.mapper.CourtCaseMapper;
 import ro.signsofter.caseobserver.entity.CourtCase;
 import ro.signsofter.caseobserver.exception.portal.PortalQueryException;
 import ro.signsofter.caseobserver.external.dto.caseResponse.CaseDetailsDto;
 import ro.signsofter.caseobserver.service.CourtCaseService;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/cases")
@@ -20,18 +23,26 @@ public class CourtCaseController {
     }
 
 
+    @GetMapping("/{id}")
+    public ResponseEntity<CourtCaseResponseDto> getCase(@PathVariable Long id) {
+        Optional<CourtCase> caseOpt = courtCaseService.getCaseById(id);
+        return caseOpt.map(c -> ResponseEntity.ok(CourtCaseMapper.toDto(c)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+    
+
     @PostMapping
     public ResponseEntity<?> createCase(@Valid @RequestBody CreateCaseRequestDto request) {
         try {
             CourtCase createdCase = courtCaseService.createCase(request);
 
             if  (null == request.getUser()) {
-                return ResponseEntity.status(HttpStatus.CREATED).body(createdCase);
+                return ResponseEntity.ok(CourtCaseMapper.toDto(createdCase));
             }
 
             courtCaseService.saveUserCase(request.getUser(), createdCase);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdCase);
+            return ResponseEntity.ok(CourtCaseMapper.toDto(createdCase));
         } catch (IllegalArgumentException | PortalQueryException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
