@@ -211,28 +211,7 @@ POST /api/cases/{id}/monitoring/deactivate  // Disable monitoring
 - `service/`
   - `CourtCaseService`: orchestrates portal fetch, entity mapping, monitoring toggles, and refresh.
   - `UserService`: user CRUD.
-- Controllers/DTOs/Security: not yet implemented (service references `controller.dto.CreateCaseRequestDto`).
-
-</details>
-
-<details>
-<summary>### Model–Schema Alignment (important)</summary>
-
-Flyway `V1__init.sql` defines initial tables, but several fields diverge from the current entities. You should add a `V2__...` migration to align the database schema with the entity model (or adjust entities to match V1). Key differences:
-- `court_case`
-  - V1: has `case_id`, `case_name`, `court_name`, `status`, `last_updated`, `monitoring_enabled`.
-  - Entity: uses `number` (mapped as `caseNumber`), `imposed_name`, plus `department`, `procedural_stage`, `category`, `subject`.
-- `hearing`
-  - V1: `hearing_date`, `solution`, `description`.
-  - Entity: adds `judicial_panel` and `pronouncement_date` (both non-null in entity).
-- `party`
-  - Present as entity/table but missing in V1 migration; add create-table in V2 with FK to `court_case`.
-
-Action: create a `V2__align_schema_to_entities.sql` migration to:
-- Add/rename columns in `court_case` to match the entity fields (or change the entity column names to match V1).
-- Alter `hearing` to add `judicial_panel` and `pronouncement_date` (nullable initially if needed, then backfill). 
-- Create `party` table with `id`, `name`, `role`, and `case_id` FK.
-- Validate `user_case`, `notification`, and `user` match current entities (they largely do).
+- Controllers/DTOs/Security: ✅ **COMPLETED** - Full REST API with JWT security implemented.
 
 </details>
 
