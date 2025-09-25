@@ -1,6 +1,5 @@
 package ro.signsofter.caseobserver.service;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -11,6 +10,7 @@ import ro.signsofter.caseobserver.controller.dto.CreateCaseRequestDto;
 import ro.signsofter.caseobserver.entity.CourtCase;
 import ro.signsofter.caseobserver.entity.Hearing;
 import ro.signsofter.caseobserver.entity.Party;
+import ro.signsofter.caseobserver.entity.UserCase;
 import ro.signsofter.caseobserver.exception.portal.PortalQueryException;
 import ro.signsofter.caseobserver.external.PortalQueryService;
 import ro.signsofter.caseobserver.external.dto.caseResponse.CaseDetailsDto;
@@ -35,14 +35,10 @@ class CourtCaseServiceTest {
 
     @InjectMocks private CourtCaseService courtCaseService;
 
-    @BeforeEach
-    void setup() {
-        when(courtCaseRepository.existsByCaseNumber(anyString())).thenReturn(false);
-    }
-
     @Test
     void createCase_mapsExternalDataAndSaves() throws PortalQueryException {
         // Arrange external response
+        when(courtCaseRepository.existsByCaseNumber(anyString())).thenReturn(false);
         HearingDto hearingDto = new HearingDto();
         hearingDto.setDate("2025-09-01");
         hearingDto.setTime("10:30");
@@ -101,6 +97,56 @@ class CourtCaseServiceTest {
         ArgumentCaptor<CourtCase> captor = ArgumentCaptor.forClass(CourtCase.class);
         verify(courtCaseRepository).save(captor.capture());
         assertThat(captor.getValue().getCaseNumber()).isEqualTo("12345/2025");
+    }
+
+    @Test
+    void getCasesForUser_returnsUserCases() {
+        // Arrange
+        String username = "testuser";
+        
+        CourtCase case1 = new CourtCase();
+        case1.setId(1L);
+        case1.setCaseNumber("12345/2025");
+        case1.setCourtName("TRIBUNALUL BUCURESTI");
+        
+        CourtCase case2 = new CourtCase();
+        case2.setId(2L);
+        case2.setCaseNumber("67890/2025");
+        case2.setCourtName("TRIBUNALUL CLUJ");
+        
+        UserCase userCase1 = new UserCase();
+        userCase1.setCourtCase(case1);
+        
+        UserCase userCase2 = new UserCase();
+        userCase2.setCourtCase(case2);
+        
+        List<UserCase> userCases = List.of(userCase1, userCase2);
+        
+        when(userCaseRepository.findByUserUsername(username)).thenReturn(userCases);
+        
+        // Act
+        List<CourtCase> result = courtCaseService.getCasesForUser(username);
+        
+        // Assert
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getCaseNumber()).isEqualTo("12345/2025");
+        assertThat(result.get(1).getCaseNumber()).isEqualTo("67890/2025");
+        
+        verify(userCaseRepository).findByUserUsername(username);
+    }
+
+    @Test
+    void getCasesForUser_returnsEmptyList_whenUserHasNoCases() {
+        // Arrange
+        String username = "testuser";
+        when(userCaseRepository.findByUserUsername(username)).thenReturn(List.of());
+        
+        // Act
+        List<CourtCase> result = courtCaseService.getCasesForUser(username);
+        
+        // Assert
+        assertThat(result).isEmpty();
+        verify(userCaseRepository).findByUserUsername(username);
     }
 }
 

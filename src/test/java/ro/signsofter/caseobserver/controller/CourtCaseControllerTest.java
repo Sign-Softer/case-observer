@@ -24,10 +24,12 @@ import ro.signsofter.caseobserver.repository.UserRepository;
 import ro.signsofter.caseobserver.security.JwtService;
 import ro.signsofter.caseobserver.service.CourtCaseService;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(controllers = CourtCaseController.class)
@@ -112,6 +114,49 @@ class CourtCaseControllerTest {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/cases/{id}", 999))
                 .andExpect(MockMvcResultMatchers.status().isNotFound());
+    }
+
+    @Test
+    void listCases_returns200_withUserCases() throws Exception {
+        // Create test cases
+        CourtCase case1 = new CourtCase();
+        case1.setId(1L);
+        case1.setCaseNumber("12345/2025");
+        case1.setCourtName("TRIBUNALUL BUCURESTI");
+        case1.setStatus("Fond");
+
+        CourtCase case2 = new CourtCase();
+        case2.setId(2L);
+        case2.setCaseNumber("67890/2025");
+        case2.setCourtName("TRIBUNALUL CLUJ");
+        case2.setStatus("Procedura");
+
+        List<CourtCase> userCases = List.of(case1, case2);
+
+        // Mock the service method
+        when(courtCaseService.getCasesForUser(anyString())).thenReturn(userCases);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/cases")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(2))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].caseNumber").value("12345/2025"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].courtName").value("TRIBUNALUL BUCURESTI"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].caseNumber").value("67890/2025"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].courtName").value("TRIBUNALUL CLUJ"));
+    }
+
+    @Test
+    void listCases_returns200_withEmptyList_whenUserHasNoCases() throws Exception {
+        // Mock empty list for user with no cases
+        when(courtCaseService.getCasesForUser(anyString())).thenReturn(List.of());
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/cases")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$").isArray())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.length()").value(0));
     }
 }
 

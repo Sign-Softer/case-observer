@@ -34,6 +34,13 @@ public class CourtCaseService {
         return courtCaseRepository.findAll();
     }
 
+    public List<CourtCase> getCasesForUser(String username) {
+        return userCaseRepository.findByUserUsername(username)
+                .stream()
+                .map(UserCase::getCourtCase)
+                .collect(Collectors.toList());
+    }
+
     public Optional<CourtCase> getCaseById(Long id) {
         return courtCaseRepository.findById(id);
     }

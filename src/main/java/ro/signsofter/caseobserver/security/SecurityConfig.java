@@ -31,6 +31,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/cases/fetch").permitAll()
                 .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/api/users/**").authenticated()
+                .requestMatchers("/api/cases").authenticated() // require auth for listCases
                 .requestMatchers("/api/cases/{id}/refetch").permitAll() // temporarily open
                 .requestMatchers("/api/cases/{id}/monitoring/**").permitAll() // temporarily open
                 .requestMatchers("/api/cases/{id}/notification-settings").permitAll() // temporarily open

@@ -2,6 +2,8 @@ package ro.signsofter.caseobserver.controller;
 
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import ro.signsofter.caseobserver.controller.dto.CourtCaseResponseDto;
 import ro.signsofter.caseobserver.controller.dto.CreateCaseRequestDto;
@@ -11,7 +13,9 @@ import ro.signsofter.caseobserver.exception.portal.PortalQueryException;
 import ro.signsofter.caseobserver.external.dto.caseResponse.CaseDetailsDto;
 import ro.signsofter.caseobserver.service.CourtCaseService;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/cases")
@@ -22,6 +26,14 @@ public class CourtCaseController {
         this.courtCaseService = courtCaseService;
     }
 
+    @GetMapping
+    public List<CourtCaseResponseDto> listCases() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+        return courtCaseService.getCasesForUser(username).stream()
+                .map(CourtCaseMapper::toDto)
+                .collect(Collectors.toList());
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<CourtCaseResponseDto> getCase(@PathVariable Long id) {
