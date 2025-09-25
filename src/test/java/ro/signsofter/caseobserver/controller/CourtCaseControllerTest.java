@@ -7,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -20,6 +21,7 @@ import ro.signsofter.caseobserver.external.dto.caseResponse.PartyDto;
 import ro.signsofter.caseobserver.repository.CourtCaseRepository;
 import ro.signsofter.caseobserver.repository.UserCaseRepository;
 import ro.signsofter.caseobserver.repository.UserRepository;
+import ro.signsofter.caseobserver.security.JwtService;
 import ro.signsofter.caseobserver.service.CourtCaseService;
 
 import java.util.Optional;
@@ -29,6 +31,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 
 @WebMvcTest(controllers = CourtCaseController.class)
+@Import(TestSecurityConfig.class)
 class CourtCaseControllerTest {
 
     @Autowired
@@ -44,6 +47,7 @@ class CourtCaseControllerTest {
     @MockBean private CourtCaseRepository courtCaseRepository;
     @MockBean private UserRepository userRepository;
     @MockBean private UserCaseRepository userCaseRepository;
+    @MockBean private JwtService jwtService;
 
     @Test
     void createCase_returns400_whenValidationFails() throws Exception {

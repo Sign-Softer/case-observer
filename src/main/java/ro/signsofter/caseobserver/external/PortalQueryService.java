@@ -23,11 +23,14 @@ public class PortalQueryService {
     private PortalProperties portalProperties;
 
     public CaseDetailsDto fetchCaseDetails(String caseNumber, String institution) throws PortalQueryException {
+        System.out.println("PortalQueryService - Fetching case: " + caseNumber + " from " + institution);
         int attempts = Math.max(1, portalProperties.getRetries() + 1);
         Exception last = null;
         for (int i = 0; i < attempts; i++) {
             try {
+                System.out.println("PortalQueryService - Attempt " + (i + 1) + "/" + attempts);
                 String soapResponse = sendSoapRequest(caseNumber, institution);
+                System.out.println("PortalQueryService - SOAP response length: " + soapResponse.length());
                 JAXBContext context = JAXBContext.newInstance(FetchCaseEnvelope.class);
                 Unmarshaller unmarshaller = context.createUnmarshaller();
                 FetchCaseEnvelope envelope = (FetchCaseEnvelope) unmarshaller.unmarshal(new StringReader(soapResponse));
@@ -38,8 +41,10 @@ public class PortalQueryService {
                     throw new PortalQueryException("Portal returned an empty or malformed response");
                 }
 
+                System.out.println("PortalQueryService - Successfully parsed response");
                 return envelope.getBody().getResponse().getResult().getCaseDetails();
             } catch (Exception e) {
+                System.out.println("PortalQueryService - Attempt " + (i + 1) + " failed: " + e.getMessage());
                 last = e;
                 // simple retry on transient errors
             }
