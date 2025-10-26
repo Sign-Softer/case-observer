@@ -44,6 +44,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+      
       - name: Cache Maven dependencies
         uses: actions/cache@v4
         with:
@@ -85,6 +88,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+      
       - name: Build JAR
         run: ./mvnw clean package -DskipTests
       
@@ -110,6 +116,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
       
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
+      
       - name: Run Checkstyle
         run: ./mvnw checkstyle:check
         continue-on-error: true
@@ -132,6 +141,9 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
+      
+      - name: Make mvnw executable
+        run: chmod +x ./mvnw
       
       - name: Run OWASP Dependency Check
         run: |
