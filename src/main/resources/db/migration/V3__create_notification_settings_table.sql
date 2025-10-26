@@ -27,7 +27,6 @@ CREATE TABLE notification_settings (
 CREATE INDEX idx_notification_settings_next_check 
     ON notification_settings(next_check_at);
 
--- Create index for active monitoring queries
-CREATE INDEX idx_notification_settings_active_monitoring 
-    ON notification_settings(case_id) 
-    WHERE next_check_at IS NOT NULL;
+-- Create index for active monitoring queries (MySQL doesn't support partial indexes)
+CREATE INDEX idx_notification_settings_case_id 
+    ON notification_settings(case_id);

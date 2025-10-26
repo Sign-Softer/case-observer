@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # MySQL Database for Development
+  mysql-dev:
+    image: mysql:8
+    container_name: case-observer-mysql-dev
+    environment:
+      MYSQL_ROOT_PASSWORD: 12345
+      MYSQL_DATABASE: observer_dev
+    ports:
+      - "3307:3306"  # Use different port to avoid conflicts
+    volumes:
+      - mysql_dev_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - case-observer-network
+
+  # Redis for Caching (future use)
+  redis-dev:
+    image: redis:7-alpine
+    container_name: case-observer-redis-dev
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - case-observer-network
+
+  # Spring Boot Application (optional - run locally for hot reload)
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: case-observer-backend-dev
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - DB_HOST=mysql-dev
+      - DB_PORT=3306
+      - DB_NAME=observer_dev
+      - DB_USERNAME=root
+      - DB_PASSWORD=12345
+      - JWT_SECRET=dev-secret-key-change-in-production-minimum-32-characters-long
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql-dev:
+        condition: service_healthy
+      redis-dev:
+        condition: service_healthy
+    networks:
+      - case-observer-network
+    command: ["--spring.profiles.active=dev"]
+
+volumes:
+  mysql_dev_data:
+    driver: local
+
+networks:
+  case-observer-network:
+    driver: bridge
