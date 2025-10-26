@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface UserCaseRepository extends JpaRepository<UserCase, UserCase.UserCaseId> {
     List<UserCase> findByUserUsername(String username);
+    List<UserCase> findByCourtCaseId(Long courtCaseId);
 }
 

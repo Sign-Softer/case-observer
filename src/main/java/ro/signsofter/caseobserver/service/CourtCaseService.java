@@ -8,6 +8,7 @@ import ro.signsofter.caseobserver.exception.portal.PortalQueryException;
 import ro.signsofter.caseobserver.external.PortalQueryService;
 import ro.signsofter.caseobserver.external.dto.caseResponse.CaseDetailsDto;
 import ro.signsofter.caseobserver.repository.CourtCaseRepository;
+import ro.signsofter.caseobserver.repository.NotificationSettingsRepository;
 import ro.signsofter.caseobserver.repository.UserCaseRepository;
 import ro.signsofter.caseobserver.repository.UserRepository;
 
@@ -21,14 +22,26 @@ import java.util.stream.Collectors;
 @Service
 public class CourtCaseService {
 
-    @Autowired
-    private CourtCaseRepository courtCaseRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private UserCaseRepository userCaseRepository;
-    @Autowired
-    private PortalQueryService portalQueryService;
+    private final CourtCaseRepository courtCaseRepository;
+    private final UserRepository userRepository;
+    private final UserCaseRepository userCaseRepository;
+    private final NotificationSettingsRepository notificationSettingsRepository;
+    private final PortalQueryService portalQueryService;
+    private final CaseMonitoringService caseMonitoringService;
+
+    public CourtCaseService(CourtCaseRepository courtCaseRepository,
+                           UserRepository userRepository,
+                           UserCaseRepository userCaseRepository,
+                           NotificationSettingsRepository notificationSettingsRepository,
+                           PortalQueryService portalQueryService,
+                           CaseMonitoringService caseMonitoringService) {
+        this.courtCaseRepository = courtCaseRepository;
+        this.userRepository = userRepository;
+        this.userCaseRepository = userCaseRepository;
+        this.notificationSettingsRepository = notificationSettingsRepository;
+        this.portalQueryService = portalQueryService;
+        this.caseMonitoringService = caseMonitoringService;
+    }
 
     public List<CourtCase> getAllCases() {
         return courtCaseRepository.findAll();
@@ -163,11 +176,10 @@ public class CourtCaseService {
         CourtCase courtCase = courtCaseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Case not found with id " + id));
 
-        courtCase.setMonitoringEnabled(true);
+        // Use the new monitoring service
+        caseMonitoringService.startMonitoringCase(id, notificationIntervalMinutes);
 
-        // TODO: Save notification interval in notification settings entity or related config
-
-        return courtCaseRepository.save(courtCase);
+        return courtCaseRepository.findById(id).orElse(courtCase);
     }
 
     // Deactivate monitoring
@@ -175,9 +187,10 @@ public class CourtCaseService {
         CourtCase courtCase = courtCaseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Case not found with id " + id));
 
-        courtCase.setMonitoringEnabled(false);
+        // Use the new monitoring service
+        caseMonitoringService.stopMonitoringCase(id);
 
-        return courtCaseRepository.save(courtCase);
+        return courtCaseRepository.findById(id).orElse(courtCase);
     }
 
     // Update notification settings (interval, custom name)
@@ -185,12 +198,25 @@ public class CourtCaseService {
         CourtCase courtCase = courtCaseRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Case not found with id " + id));
 
-        // TODO: Update notification interval and custom name in notification settings entity or related config
-        // For now, just a placeholder
+        // Create or update notification settings
+        NotificationSettings settings = notificationSettingsRepository.findByCourtCaseId(id)
+                .orElse(new NotificationSettings());
+        
+        settings.setCourtCase(courtCase);
+        if (notificationIntervalMinutes != null) {
+            settings.setNotificationIntervalMinutes(notificationIntervalMinutes);
+        }
+        
+        notificationSettingsRepository.save(settings);
+        
+        // Update custom name in UserCase if provided
+        if (customName != null && !customName.trim().isEmpty()) {
+            // Find the UserCase for this case and update custom title
+            // This would need to be implemented based on which user is making the request
+            // For now, we'll just save the settings
+        }
 
-        // Example: if you have a NotificationSettings entity linked to CourtCase, update it here
-
-        return courtCaseRepository.save(courtCase);
+        return courtCaseRepository.findById(id).orElse(courtCase);
     }
 }
 

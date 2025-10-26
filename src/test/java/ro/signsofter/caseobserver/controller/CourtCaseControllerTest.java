@@ -19,9 +19,11 @@ import ro.signsofter.caseobserver.external.dto.caseResponse.CaseDetailsDto;
 import ro.signsofter.caseobserver.external.dto.caseResponse.HearingDto;
 import ro.signsofter.caseobserver.external.dto.caseResponse.PartyDto;
 import ro.signsofter.caseobserver.repository.CourtCaseRepository;
+import ro.signsofter.caseobserver.repository.NotificationSettingsRepository;
 import ro.signsofter.caseobserver.repository.UserCaseRepository;
 import ro.signsofter.caseobserver.repository.UserRepository;
 import ro.signsofter.caseobserver.security.JwtService;
+import ro.signsofter.caseobserver.service.CaseMonitoringService;
 import ro.signsofter.caseobserver.service.CourtCaseService;
 
 import java.util.List;
@@ -49,6 +51,8 @@ class CourtCaseControllerTest {
     @MockBean private CourtCaseRepository courtCaseRepository;
     @MockBean private UserRepository userRepository;
     @MockBean private UserCaseRepository userCaseRepository;
+    @MockBean private NotificationSettingsRepository notificationSettingsRepository;
+    @MockBean private CaseMonitoringService caseMonitoringService;
     @MockBean private JwtService jwtService;
 
     @Test
