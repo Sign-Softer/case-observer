@@ -4,7 +4,7 @@ services:
   # MySQL Database for Development
   mysql-dev:
     image: mysql:8
-    container_name: case-observer-mysql-dev
+    container_name: cs-db
     environment:
       MYSQL_ROOT_PASSWORD: 12345
       MYSQL_DATABASE: observer_dev
@@ -23,7 +23,7 @@ services:
   # Redis for Caching (future use)
   redis-dev:
     image: redis:7-alpine
-    container_name: case-observer-redis-dev
+    container_name: cs-redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -39,7 +39,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
-    container_name: case-observer-backend-dev
+    container_name: cs-java
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - DB_HOST=mysql-dev
@@ -58,6 +58,27 @@ services:
     networks:
       - case-observer-network
     command: ["--spring.profiles.active=dev"]
+
+  # Next.js Frontend Application
+  frontend-dev:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: cs-node
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NODE_ENV=development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend-dev
+    networks:
+      - case-observer-network
+    command: npm run dev
 
 volumes:
   mysql_dev_data:

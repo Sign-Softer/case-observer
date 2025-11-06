@@ -2,17 +2,7 @@
 
 ## Overview
 
-This document outlines the complete DevOps strategy for the Case Observer application, including the Spring Boot backend infrastructure, planned frontend integration, CI/CD pipeline, and deployment architecture.
-
-**Current Status:**
-- ✅ **Backend**: Spring Boot 3.4.3 (Java 17) - Fully implemented
-- ✅ **Docker**: Multi-stage builds and compose files configured
-- ✅ **Database**: MySQL 8 + Redis configured
-- ✅ **Monitoring**: Scheduled case monitoring implemented
-- ✅ **CI/CD**: Backend CI pipeline implemented (`.github/workflows/backend-ci.yml`)
-- ❌ **Frontend**: Not yet implemented (planned)
-- ❌ **Deployment Pipeline**: Not yet implemented (needs deploy workflow)
-- ⚠️ **Actuator**: Configuration exists but dependency missing in pom.xml
+This document outlines the complete DevOps strategy for integrating the Next.js frontend with the Spring Boot backend, including development workflow, CI/CD pipeline, and deployment architecture.
 
 ---
 
@@ -53,22 +43,14 @@ This document outlines the complete DevOps strategy for the Case Observer applic
 │                    Data Layer                           │
 │  ┌────────────────┐  ┌────────────────┐                 │
 │  │   MySQL 8      │  │     Redis      │                 │
-│  │  ✅ CONFIGURED │  │  ✅ CONFIGURED │                 │
 │  │  (Persistent)  │  │   (Cache)      │                 │
 │  └────────────────┘  └────────────────┘                 │
 └─────────────────────────────────────────────────────────┘
 ```
 
-**Legend:**
-- ✅ Implemented
-- 🔮 Planned/Future
-- ⚠️ Needs attention
-
 ---
 
 ## 🔌 **Frontend-Backend Communication Strategy**
-
-> **Note**: Frontend is not yet implemented. This section outlines the planned integration strategy.
 
 ### **1. API Communication Layer**
 
