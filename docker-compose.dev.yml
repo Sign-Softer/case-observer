@@ -66,10 +66,8 @@ services:
       dockerfile: Dockerfile.dev
     container_name: cs-node
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_API_URL=http://localhost/api
       - NODE_ENV=development
-    ports:
-      - "3000:3000"
     volumes:
       - ./frontend:/app
       - /app/node_modules
@@ -79,6 +77,21 @@ services:
     networks:
       - case-observer-network
     command: npm run dev
+
+  # Nginx Reverse Proxy
+  nginx-dev:
+    image: nginx:alpine
+    container_name: cs-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend-dev
+      - frontend-dev
+    networks:
+      - case-observer-network
+    restart: unless-stopped
 
 volumes:
   mysql_dev_data:
