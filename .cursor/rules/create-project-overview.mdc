@@ -1,0 +1,36 @@
+---
+description: Generates a comprehensive project overview.
+globs:
+alwaysApply: false
+---
+
+Generate a markdown file with the EXACT filename: `specs/project-overview.md`
+
+# Content Requirements
+Analyze the current project and include:
+
+1. Architecture details:
+   - Infrastructure setup
+   - Frontend stack with versions
+   - Backend stack with versions
+
+2. Project information:
+   - Purpose of the application
+   - Target audience
+   - Detailed list of use cases
+
+3. Technical specifications:
+   - Specific version constraints
+   - Detailed technical requirements
+   - Architectural decisions
+   - Project folder structure explanation
+   - Testing utilities
+
+4. Add a "# Shortcuts" section with useful commands such as:
+   - **cd relative/path/to/dir && make run-phpunit** - run all tests
+   - **cd relative/path/to/dir && make run-phpunit TEST=CreateAccountUseCase** - run tests on specific class
+   - **cd relative/path/to/dir && make phpstan** - run phpstan
+   
+
+IMPORTANT: DO NOT create any filename other than `specs/project-overview.md`. The file must be named EXACTLY as specified.
+DO NOT include placeholders or unverified information. Verify all details by examining the actual project files.

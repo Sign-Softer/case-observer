@@ -1,0 +1,100 @@
+---
+description: Analyze file upload functionality for security issues like unrestricted file types, path traversal, XSS in filenames, and unsafe storage. Applies to PHP/Symfony and Node/Express.
+globs:
+  - '**/*.php'
+  - '**/*.js'
+  - '**/*.ts'
+alwaysApply: false
+---
+
+# Rule: File Upload Security
+
+## Objective
+Ensure secure handling of uploaded files by validating types, enforcing size limits, sanitizing filenames, and restricting access to uploaded content.
+
+## Step 1: Security Analysis and Checklist Creation
+
+1. **Understand Upload Flow:** Endpoint, temp storage, final storage path
+2. **Identify Stack:** PHP file handling, Symfony upload logic, Node with Multer, etc.
+3. **Map All File Input Points.**
+4. **Create a Developer-Focused Security Checklist:**
+
+<xml>
+### Security Checklist: uploadHandler.php / upload.js
+
+#### Code Purpose
+Handles user-uploaded files for profile pictures or attachments.
+
+#### Technology Context
+- PHP 8.1 with native move_uploaded_file
+- Node.js Express with multer
+
+#### Attack Surface
+- POST /upload
+- Uploaded filenames, MIME types, file content
+
+#### Security Checklist
+
+- [ ] **Restrict file types (MIME + extension)** ⚠️ CRITICAL
+    - Risk: Arbitrary code or malware upload
+    - Complexity: Medium
+    - Fix: Enforce image-only MIME types
+
+- [ ] **Sanitize filenames** ⚠️ CRITICAL
+    - Risk: XSS or directory traversal
+    - Complexity: Low
+    - Fix: Replace unsafe characters + `basename()`
+
+- [ ] **Limit file size (2MB, etc.)** ⭐ HIGH ROI
+    - Risk: DoS or storage abuse
+    - Complexity: Low
+    - Fix: Check `size` and server settings
+
+- [ ] **Store outside webroot or serve with download headers** ⭐ HIGH ROI
+    - Risk: RCE or XSS on open
+    - Complexity: Medium
+    - Fix: Use `Content-Disposition: attachment`
+
+- [ ] **Scan or sanitize uploads** 🛡️ DEFENSE IN DEPTH
+    - Risk: Embedded malware
+    - Complexity: High
+    - Fix: Use AV engine or sanitize libraries
+</xml>
+
+5. **CVE Assessment:**
+   - CVE-2018-9206 (PHP upload RCE)
+   - CVE-2024-13059 (multer path traversal)
+
+## Step 2: Security Validation
+
+**Validation Methods:**
+1. Upload file with XSS in name
+2. Upload disallowed MIME (e.g., PHP as PNG)
+3. Attempt path traversal in name (`../`)
+4. Upload overly large file
+
+### Example Test Snippet
+<xml>
+Filename: evil<script>.jpg ➝ Ensure response encodes/renames it
+</xml>
+
+## Step 3: Developer-Focused Remediation
+
+**Example Fix: Filename Sanitization (Node)**
+<xml>
+Before:
+const filename = req.file.originalname;
+
+After:
+const filename = Date.now() + '_' + filename.replace(/[^a-zA-Z0-9.]/g, '_');
+</xml>
+
+**Impact:**
+- Blocks path traversal
+- Prevents stored XSS via filename
+
+## Final Output Requirements
+- Type/size/path checklist
+- Filename fix examples
+- CVE references for upload handlers
+

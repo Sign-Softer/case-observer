@@ -1,0 +1,101 @@
+---
+description: Analyze and secure web APIs against authentication issues, token tampering, excessive data exposure, and abuse. Applies to REST/GraphQL APIs in Symfony and Node environments.
+globs:
+  - '**/*.php'
+  - '**/*.js'
+  - '**/*.ts'
+alwaysApply: false
+---
+
+# Rule: API Security Validation
+
+## Objective
+Ensure APIs are properly authenticated, authorized, and hardened against token abuse, CORS misconfigurations, excessive data exposure, and DoS.
+
+## Step 1: Security Analysis and Checklist Creation
+
+1. **Understand API Purpose & Usage:** Internal vs. public, token-based vs. cookie auth
+2. **Identify Stack:** Symfony APIs (JWT bundle), Node Express + JWT, GraphQL servers
+3. **Map All API Endpoints and Token Usage.**
+4. **Create a Developer-Focused Security Checklist:**
+
+<xml>
+### Security Checklist: api/user.js / ApiController.php
+
+#### Code Purpose
+Provides authenticated API access to user data and other services.
+
+#### Technology Context
+- PHP 8.1 / Symfony API Platform
+- Node.js Express REST API with JWT
+
+#### Attack Surface
+- Authorization headers (JWT/API key)
+- GraphQL queries
+- CORS-enabled frontend
+
+#### Security Checklist
+
+- [ ] **JWT signature and expiration enforced** ⚠️ CRITICAL
+    - Risk: Token tampering or replay
+    - Complexity: Low
+    - Fix: Verify `alg`, `exp`, `aud`, `iss`
+
+- [ ] **API rate limiting** ⭐ HIGH ROI
+    - Risk: DoS, brute force
+    - Complexity: Medium
+    - Fix: Add rate limit middleware
+
+- [ ] **CORS config restricts origin** ⚠️ CRITICAL
+    - Risk: Cross-site credential leak
+    - Complexity: Medium
+    - Fix: Allow only trusted domains
+
+- [ ] **Avoid overexposing sensitive fields** ⚠️ CRITICAL
+    - Risk: Sensitive data exposure
+    - Complexity: Low
+    - Fix: Filter fields before response
+
+- [ ] **Auth on all sensitive endpoints** ⭐ HIGH ROI
+    - Risk: Unauthenticated access
+    - Complexity: Low
+    - Fix: Add guards/middleware checks
+</xml>
+
+5. **CVE Assessment:**
+   - CVE-2022-23540 (jsonwebtoken alg=none)
+   - CVE-2024-45590 (Express DoS via body-parser)
+
+## Step 2: Security Validation
+
+**Validation Methods:**
+1. Token tampering test
+2. Unauthenticated API call attempt
+3. CORS origin bypass testing
+4. Rate limit fuzzing
+
+### Example Test Snippet
+<xml>
+JWT with alg=none + empty signature ➝ verify server rejects it
+</xml>
+
+## Step 3: Developer-Focused Remediation
+
+**Example Fix: CORS Restriction in Express**
+<xml>
+Before:
+app.use(cors());
+
+After:
+app.use(cors({ origin: 'https://yourapp.com', credentials: true }));
+</xml>
+
+**Impact:**
+- Prevents token abuse from malicious sites
+- Secures browser-to-API trust boundaries
+
+## Final Output Requirements
+- Token/CORS/rate-limit checklist
+- Before/after examples
+- CVEs for relevant JWT, CORS, and API libs
+

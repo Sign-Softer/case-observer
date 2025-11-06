@@ -1,0 +1,110 @@
+---
+description: Analyze authentication mechanisms for security risks and implementation flaws in web applications using PHP/Symfony or Node/Express.
+globs:
+  - '**/*.php'
+  - '**/*.js'
+  - '**/*.ts'
+alwaysApply: false
+---
+
+# Rule: Authentication Security Analysis
+
+## Objective
+Analyze authentication components in web applications, identify vulnerabilities, and provide developers with a practical checklist and remediations that strengthen login flows, credential storage, session handling, and token use.
+
+## Step 1: Security Analysis and Checklist Creation
+
+1. **Understand the Authentication Flow:** Describe how users log in and how sessions/tokens are handled.
+2. **Identify Technology Stack:** PHP with Symfony Security component, or Node.js with Passport/OAuth2, etc.
+3. **Map Login, Registration, Session and Token Endpoints.**
+4. **Create a Developer-Focused Security Checklist:**
+
+<xml>
+### Security Checklist: AuthController.php / auth.js
+
+#### Code Purpose
+Handles user login, registration, and session/token creation.
+
+#### Technology Context
+- PHP 8.1 / Symfony 6.2 (Security component)
+- Node.js 18+ with Express and Passport.js
+- Session or JWT-based auth
+
+#### Attack Surface
+- POST /login
+- POST /register
+- Session cookies or Authorization headers (JWTs)
+
+#### Security Checklist
+
+- [ ] **Use secure password hashing (bcrypt/Argon2)** ⚠️ CRITICAL
+    - Risk: Breached password storage
+    - Complexity: Low
+    - Fix: Use `password_hash()` in PHP or `bcrypt.hash()` in Node
+
+- [ ] **Ensure session cookie security** ⭐ HIGH ROI
+    - Risk: Session hijacking
+    - Complexity: Low
+    - Fix: `HttpOnly`, `Secure`, and `SameSite` flags set
+
+- [ ] **Enforce rate limiting on login** 🛡️ DEFENSE IN DEPTH
+    - Risk: Brute-force password attacks
+    - Complexity: Medium
+    - Fix: Add login throttling middleware or rate limiter
+
+- [ ] **Expire and verify JWTs securely** ⚠️ CRITICAL
+    - Risk: Replay or token tampering
+    - Complexity: Low
+    - Fix: Use short expiry and algorithm validation
+
+- [ ] **Hide login error details** ⭐ HIGH ROI
+    - Risk: Enumeration
+    - Complexity: Low
+    - Fix: Generic error for failed login
+</xml>
+
+5. **CVE Assessment:**
+   - Check for vulnerable auth libraries or middleware (e.g., `jsonwebtoken`, Symfony Security).
+   - CVE-2022-23540 (jsonwebtoken `alg: none`)
+   - CVE-2024-51996 (Symfony remember-me bypass)
+
+## Step 2: Security Validation
+
+**Validation Methods:**
+1. Code Review
+2. Auth Bypass & Token Tampering
+3. Expired/Unsigned JWT Test
+4. Cookie Inspection
+5. Brute-force Test (rate limit)
+
+### Example Test Snippet
+<xml>
+// Node.js JWT test
+const jwt = require('jsonwebtoken');
+const fakeToken = jwt.sign({ id: 1, role: 'admin' }, '', { algorithm: 'none' });
+fetch('/admin', { headers: { Authorization: `Bearer ${fakeToken}` } })
+    .then(r => console.log(r.status));
+</xml>
+
+## Step 3: Developer-Focused Remediation
+
+**Example Fix: JWT Signature Enforcement in Express**
+<xml>
+Before:
+jwt.verify(token, JWT_SECRET);
+
+After:
+jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'], maxAge: '1h' });
+</xml>
+
+**Impact:**
+- Prevents forged token attacks
+- Rejects expired tokens
+- Avoids insecure defaults (e.g. `alg: none`)
+
+## Final Output Requirements
+- Prioritized checklist
+- Clear fixes with examples
+- Practical remediation steps for devs
+- CVEs and links to library updates
+

@@ -1,0 +1,102 @@
+---
+description: Evaluate access control logic in web applications to ensure proper authorization and prevent privilege escalation or IDOR attacks. Applies to PHP/Symfony and Node/Express environments.
+globs:
+  - '**/*.php'
+  - '**/*.js'
+  - '**/*.ts'
+alwaysApply: false
+---
+
+# Rule: Access Control Enforcement
+
+## Objective
+Ensure robust access control by identifying missing role checks, insecure object access, and privilege escalation vectors. Provide actionable advice on authorization logic, route protection, and ownership checks.
+
+## Step 1: Security Analysis and Checklist Creation
+
+1. **Understand Roles and Privileges:** Map user roles and corresponding permissions.
+2. **Identify Stack:** Symfony security voters/access_control, or Node middleware (e.g., RBAC, Passport).
+3. **Map All Protected Endpoints and Object References.**
+4. **Create a Developer-Focused Security Checklist:**
+
+<xml>
+### Security Checklist: AdminController.php / admin.js
+
+#### Code Purpose
+Protects privileged admin functionality and data.
+
+#### Technology Context
+- PHP 8.1 / Symfony Security
+- Node.js with Express and role-based middleware
+
+#### Attack Surface
+- /admin routes
+- /users/:id (user lookup/edit)
+- Tokens/cookies controlling access
+
+#### Security Checklist
+
+- [ ] **Route-based role checks** ⚠️ CRITICAL
+    - Risk: Privilege escalation
+    - Complexity: Low
+    - Fix: Symfony `access_control`, Express middleware
+
+- [ ] **Ownership checks on object access** ⚠️ CRITICAL
+    - Risk: IDOR
+    - Complexity: Low
+    - Fix: Query by `id AND user_id`
+
+- [ ] **Avoid client-controlled role flags** ⭐ HIGH ROI
+    - Risk: Bypass via tampered input
+    - Complexity: Low
+    - Fix: Server-controlled role assignment only
+
+- [ ] **Protect all admin/debug endpoints** ⚠️ CRITICAL
+    - Risk: Admin takeover, debug exposure
+    - Complexity: Medium
+    - Fix: Authz middleware + restrict route exposure
+
+- [ ] **Use default-deny config for routes** 🛡️ DEFENSE IN DEPTH
+    - Risk: Unintended access
+    - Complexity: Low
+    - Fix: Symfony default block or 401 in Express
+</xml>
+
+5. **CVE Assessment:**
+   - CVE-2020-5275 (Symfony voter logic flaw)
+   - CVE-2025-29927 (Next.js middleware bypass)
+
+## Step 2: Security Validation
+
+**Validation Methods:**
+1. Code Review
+2. Role/privilege spoofing
+3. IDOR testing via Burp Intruder
+4. Auth bypass simulation
+
+### Example Test Snippet
+<xml>
+GET /api/users/2 (as user ID 1)
+Expect: 403 Forbidden
+</xml>
+
+## Step 3: Developer-Focused Remediation
+
+**Example Fix: Ownership Check in Symfony**
+<xml>
+Before:
+$user = $repo->find($id);
+
+After:
+$user = $repo->findOneBy(["id" => $id, "owner" => $this->getUser()]);
+</xml>
+
+**Impact:**
+- Prevents cross-user data access (IDOR)
+- Confirms only intended users can act
+
+## Final Output Requirements
+- Role/object-level access checklist
+- Fix examples with real-world logic
+- CVEs and suggested upgrades
+

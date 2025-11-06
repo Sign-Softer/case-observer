@@ -1,0 +1,271 @@
+---
+description: Create test for file.
+globs:
+alwaysApply: false
+---
+
+## Objective
+Analyze the provided source file, create a detailed test plan, and then generate a corresponding PHPUnit test file adhering to the established testing guidelines.
+
+## Step 1: Project Introspection and Test Setup Discovery
+
+Before analyzing the target file, perform an introspection of the project's root directory to understand the testing environment:
+
+1.  **List Root Files:** Identify key configuration and infrastructure files (e.g., `Makefile`, `Dockerfile`, `composer.json`, `package.json`, `phpunit.xml`, `pyproject.toml`, `requirements*.txt`).
+2.  **Identify Project Type & Test Framework:**
+    *   Examine `composer.json` for PHP projects (look for `require-dev` entries like `phpunit/phpunit`, `pestphp/pest`).
+    *   Examine `package.json` for Node.js projects (look for `devDependencies` like `jest`, `mocha`, `vitest` and `scripts.test`).
+    *   Examine `pyproject.toml` or `requirements*.txt` for Python projects (look for `pytest`, `unittest`).
+    *   Check for framework-specific configuration files (e.g., `phpunit.xml`, `jest.config.js`).
+3.  **Find Test Execution Commands:**
+    *   Check `Makefile` for targets like `test`, `test-unit`, `check`, etc.
+    *   Check `composer.json` -> `scripts` section for test-related commands.
+    *   Check `package.json` -> `scripts` section (commonly `test`).
+    *   Check `Dockerfile` or CI/CD configuration files (`.github/workflows/`, `.gitlab-ci.yml`) for clues on how tests are executed.
+    *   Determine the standard command for the identified framework if no specific script is found (e.g., `./vendor/bin/phpunit`, `npm test`, `pytest`).
+4.  **Record Test Command(s):** Note the exact command(s) needed to run the tests (potentially separate commands for running all tests vs. a specific file/suite). This command will be used later to verify the generated test.
+
+    **Example Output of this Step:**
+    ```
+    Project Type: PHP (Symfony)
+    Test Framework: PHPUnit
+    Test Command (All): composer test
+    Test Command (Specific File): ./vendor/bin/phpunit tests/Specific/FileTest.php
+    ```
+
+## Step 2: Analyze and Plan
+
+1.  **Understand the File:** Briefly describe the purpose of the source file.
+2.  **Identify Dependencies:** List the core dependencies that will need mocking or setup in the test.
+3.  **Create a Detailed Test Plan:**
+    *   Generate a test plan in markdown format (similar to the example below). This plan is primarily for guiding the AI's test generation process.
+    *   Focus on specific scenarios, edge cases, valid/invalid inputs, boundary conditions, error handling, state changes, and interactions with dependencies.
+    *   Use a checklist format for clarity.
+    *   **DO NOT** include vague placeholders. Be specific about what needs to be tested and the expected outcome. If context is missing to create a good plan, clearly state what information is needed.
+
+    **Example Test Plan Structure (for a hypothetical `UserValidator.php`):**
+
+    ```markdown
+    ### Test Plan: UserValidator.php
+
+    #### Purpose
+    Validates user input data (e.g., username, email, password) before processing or storage.
+
+    #### Dependencies
+    - `ExternalValidationService`: Used for checking against an external blocklist.
+    - `UserRepository`: Used to check for username uniqueness.
+    - `App\Exception\ValidationException`: Custom exception for validation failures.
+
+    #### Test Cases
+
+    - [ ] **Username Validation**
+        - Test valid username (alphanumeric, 3-20 chars) - expects success (no exception).
+        - Test username exactly at min length (3 chars) - expects success.
+        - Test username exactly at max length (20 chars) - expects success.
+        - Test username too short (< 3 chars) - expects `ValidationException` with specific message.
+        - Test username too long (> 20 chars) - expects `ValidationException` with specific message.
+        - Test username with invalid characters (spaces, special symbols like '@#$') - expects `ValidationException`.
+        - Test username that already exists (mock `UserRepository::findByUsername` to return a user object) - expects `ValidationException`.
+        - Test username that is on the blocklist (mock `ExternalValidationService::isBlocked` to return true) - expects `ValidationException`.
+
+    - [ ] **Email Validation**
+        - Test standard valid email (user@example.com) - expects success.
+        - Test email without '@' symbol - expects `ValidationException`.
+        - Test email without domain - expects `ValidationException`.
+        - Test email with invalid TLD (.c) - expects `ValidationException`.
+        - Test email from blocked domain (mock `ExternalValidationService::isBlocked` for the domain) - expects `ValidationException`.
+
+    - [ ] **Password Complexity**
+        - Test valid password (meets length >= 8, uppercase, lowercase, number, special char requirements) - expects success.
+        - Test password exactly at min length (8 chars) - expects success.
+        - Test password below min length (7 chars) - expects `ValidationException`.
+        - Test password missing uppercase - expects `ValidationException`.
+        - Test password missing lowercase - expects `ValidationException`.
+        - Test password missing number - expects `ValidationException`.
+        - Test password missing special char - expects `ValidationException`.
+
+    - [ ] **Dependency Interaction Verification**
+        - Verify `ExternalValidationService::isBlocked()` is called exactly once for username when validating username.
+        - Verify `ExternalValidationService::isBlocked()` is called exactly once for email domain when validating email.
+        - Verify `UserRepository::findByUsername()` is called exactly once when validating username.
+    ```
+
+    **Save this generated test plan** to a file named `specs/tests/<SourceFileName>-test-plan.md`, where `<SourceFileName>` is the base name of the input source file (e.g., for `src/Service/UserValidator.php`, the plan file would be `specs/tests/UserValidator-test-plan.md`).
+
+## Step 3: Generate the Test File
+
+Based *precisely* on the test plan created in Step 2, generate the PHPUnit test file (e.g., `<FileName>Test.php`). Adhere strictly to the following guidelines derived from `rules/testing-guidelines.mdc`:
+
+### Test Directory Structure
+Place the generated test file in the corresponding directory under `tests/`, mirroring the source file's location (e.g., `src/Service/MyService.php` -> `tests/Service/MyServiceTest.php`). Follow this structure:
+
+```
+tests/
+├── Service/            # Tests for services
+├── Controller/         # Tests for controllers
+├── MessageHandler/     # Tests for message handlers
+├── EventListener/      # Tests for event listeners
+├── Serializer/         # Tests for serializers
+├── DTO/                # Tests for DTOs
+└── bootstrap.php       # PHPUnit bootstrap
+```
+
+### PHPUnit Test Structure & Best Practices
+- **Class Naming:** `<ClassName>Test` (e.g., `UserValidatorTest`). Use `final` if the class is not intended for extension. Add `@covers \Namespace\To\Class\Being\Tested`.
+- **Method Naming:** `test<WhatIsBeingTested>[With<Condition>]` (e.g., `testValidateUsernameAcceptsValidUsernames`, `testValidateUsernameRejectsInvalidUsernamesWhenTooShort`). Focus on behavior.
+- **`setUp()` Method:** Use `protected function setUp(): void` to initialize mocks and the System Under Test (SUT). Instantiate common dependencies here.
+- **Arrange-Act-Assert:** Structure *every* test method clearly using `// Arrange`, `// Act`, `// Assert` comments.
+- **Single Responsibility:** Each test method must test *one specific scenario* from the test plan. Use data providers for variations of the *same* scenario. Do not test multiple unrelated things in one method.
+- **Imports:** Import only necessary classes. Remove unused imports. Organize imports (e.g., alphabetically). Use fully qualified class names in annotations (`@covers`, `@dataProvider`, `@var`).
+- **Mocking:**
+    - Use `$this->createMock(Dependency::class)` for dependencies.
+    - Provide specific type hints for mock properties: `private MockObject&DependencyClass $mockPropertyName;`. Import `PHPUnit\Framework\MockObject\MockObject`.
+    - Mock only the methods relevant to the specific test case. Configure return values (`->willReturn(...)`) or exceptions (`->willThrowException(...)`).
+    - Use interaction assertions (`expects($this->once())`, `with(...)`) *only* when the test plan explicitly requires verifying a call was made.
+- **Data Providers:**
+    - Use for testing multiple inputs/outputs for the *same* behavior.
+    - Naming: `public static function provide<DataTypeOrScenario>(): iterable`. Return type should be `array` or `Generator` (or `iterable`).
+    - Use named array keys (`'test case description' => [...]`) or `yield 'description' => [...]` for clarity.
+    - Prefer `Generator` for large or complex datasets for memory efficiency.
+- **Assertions:** Use appropriate PHPUnit assertions (`assertEquals`, `assertTrue`, `assertCount`, `assertInstanceOf`, `expectException`, `expectExceptionMessage`, etc.). Aim for a single logical assertion per test, though multiple related assertions are acceptable if they verify a single outcome.
+
+**Example Test File Snippet (following the plan and guidelines):**
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Tests\Unit\Service; // Adjust namespace
+
+use App\Service\UserValidator; // Class under test
+use App\Service\ExternalValidationService; // Dependency
+use App\Repository\UserRepository; // Dependency
+use App\Exception\ValidationException; // Custom exception
+use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\MockObject\MockObject;
+use Generator; // If using Generators for data providers
+
+/**
+ * @covers \App\Service\UserValidator
+ */
+final class UserValidatorTest extends TestCase
+{
+    private MockObject&ExternalValidationService $externalValidationServiceMock;
+    private MockObject&UserRepository $userRepositoryMock;
+    private UserValidator $validator; // SUT
+
+    protected function setUp(): void
+    {
+        // Arrange: Common setup for all tests
+        $this->externalValidationServiceMock = $this->createMock(ExternalValidationService::class);
+        $this->userRepositoryMock = $this->createMock(UserRepository::class);
+
+        $this->validator = new UserValidator(
+            $this->externalValidationServiceMock,
+            $this->userRepositoryMock
+        );
+    }
+
+    /**
+     * @dataProvider provideValidUsernames
+     */
+    public function testValidateUsernameSucceedsForValidUsernames(string $validUsername): void
+    {
+        // Arrange: Specific mock setups for this scenario (e.g., user not blocked, not existing)
+        $this->externalValidationServiceMock->method('isBlocked')->willReturn(false);
+        $this->userRepositoryMock->method('findByUsername')->willReturn(null);
+
+        // Act: Call the method under test
+        // Assert: Expect no exception (implicitly tested by reaching end of method)
+        $this->validator->validateUsername($validUsername);
+        $this->assertTrue(true); // Explicit assertion for clarity that no exception occurred
+    }
+
+    public static function provideValidUsernames(): Generator
+    {
+        yield 'alphanumeric' => ['user123'];
+        yield 'min length' => ['abc'];
+        yield 'max length' => ['abcdefghijklmnopqrst'];
+    }
+
+    /**
+     * @dataProvider provideInvalidUsernamesForException
+     */
+    public function testValidateUsernameThrowsValidationExceptionForInvalidUsernames(string $invalidUsername, string $expectedMessage, ?callable $arrangeMocks = null): void
+    {
+        // Arrange: Expect specific exception
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage($expectedMessage);
+
+        // Arrange: Apply specific mock setups for this data row if provided
+        if ($arrangeMocks) {
+            $arrangeMocks($this->userRepositoryMock, $this->externalValidationServiceMock);
+        }
+
+        // Act: Call the method under test
+        $this->validator->validateUsername($invalidUsername);
+
+        // Assert: Handled by expectException assertions
+    }
+
+    public static function provideInvalidUsernamesForException(): Generator
+    {
+        yield 'too short' => [
+            'ab',
+            'Username must be at least 3 characters long.',
+            null // No specific mock setup needed beyond default setUp
+        ];
+        yield 'too long' => [
+            'abcdefghijklmnopqrstu',
+            'Username cannot exceed 20 characters.',
+            null
+        ];
+         yield 'invalid chars space' => [
+            'user name',
+            'Username contains invalid characters.',
+            null
+        ];
+        yield 'existing user' => [
+            'existingUser',
+            'Username is already taken.',
+            function (MockObject $userRepoMock, MockObject $externalValidationMock) {
+                $userRepoMock->method('findByUsername')->with('existingUser')->willReturn(new \stdClass()); // Simulate user found
+                $externalValidationMock->method('isBlocked')->willReturn(false); // Assume not blocked for this case
+            }
+        ];
+        yield 'blocked user' => [
+            'blockedUser',
+            'Username is blocked.',
+            function (MockObject $userRepoMock, MockObject $externalValidationMock) {
+                 $userRepoMock->method('findByUsername')->willReturn(null); // Assume not existing for this case
+                 $externalValidationMock->method('isBlocked')->with('blockedUser')->willReturn(true); // Simulate user blocked
+            }
+        ];
+        // ... add cases for email, password validation etc. following the plan
+    }
+
+    public function testValidateUsernameChecksBlocklistExactlyOnce(): void
+    {
+        // Arrange
+        $username = 'testuser';
+        $this->userRepositoryMock->method('findByUsername')->willReturn(null); // Assume user doesn't exist
+
+        $this->externalValidationServiceMock
+            ->expects($this->once()) // Assert interaction
+            ->method('isBlocked')
+            ->with($username)
+            ->willReturn(false); // Define behavior
+
+        // Act
+        $this->validator->validateUsername($username);
+
+        // Assert: Handled by expects()
+    }
+
+    // ... other test methods for email, password, dependency interactions etc.
+}
+```
+
+## Final Output Requirement
+Generate the complete PHPUnit test file (`<SourceFileName>Test.php`) based *strictly* on the plan from Step 2 and adhering to *all* the guidelines detailed in Step 3. The generated code must be syntactically correct, follow PSR standards, and be ready to run. Verify the generated test passes using the command identified in Step 1.

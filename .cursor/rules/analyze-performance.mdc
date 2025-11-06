@@ -1,0 +1,202 @@
+---
+description: Analyzes web application code for performance bottlenecks and provides developers with straightforward, high-impact optimization recommendations that avoid unnecessary complexity.
+globs:
+alwaysApply: false
+---
+
+# Rule: Performance Analysis and Optimization
+
+## Objective
+Analyze the provided web application code, identify practical performance improvements, and provide developers with a concise, actionable optimization checklist focusing on simple implementations that deliver meaningful performance gains without unnecessary complexity.
+
+## Step 1: Performance Analysis and Checklist Creation
+
+1. **Understand the Application:** Briefly describe the purpose and functionality of the code being analyzed.
+2. **Identify Technology Stack:** List the core technologies and frameworks being used. Check for a file named `@project-overview.md` in the project root for this information.
+3. **Identify Critical Paths:** Focus only on performance-critical areas and high-volume operations.
+4. **Create a Developer-Focused Performance Checklist:**
+   * Generate a concise performance checklist in markdown format.
+   * Organize by implementation area (Database, Algorithm, Caching, etc.).
+   * Focus on practical optimizations with simple implementations.
+   * Use a checklist format for clarity.
+   * Explicitly mark optimizations as "High ROI" (simple implementation with big gains) or "Only if needed" (more complex).
+   * For each item, specify the potential performance impact and implementation complexity.
+
+   **Example Performance Checklist Structure:**
+
+   <xml>
+   ### Performance Checklist: ProductCatalogController.php
+
+   #### Code Purpose
+   Product catalog page serving filtered and sorted product listings.
+
+   #### Technology Context
+   - PHP 8.1 / Symfony / Doctrine ORM
+   - MySQL database with ~50K products
+   - REST API endpoint returning JSON
+   
+   #### Critical Operations
+   - Database queries for product filtering (executed on every page load)
+   - In-memory sorting of large result sets
+   - Serialization of product data to JSON
+
+   #### Optimization Checklist
+
+   - [ ] **Add database index for frequently filtered fields** ⭐ HIGH ROI
+       - Impact: High (query speedup of 10-100x for filtered fields)
+       - Complexity: Low (single ALTER TABLE statement)
+       - Current issue: Missing index on `category_id` and `price` columns
+       - Implementation: Add composite index on commonly filtered columns
+
+   - [ ] **Optimize N+1 query pattern** ⭐ HIGH ROI
+       - Impact: High (reduces queries from N+1 to 1)
+       - Complexity: Low (modify single repository method)
+       - Current issue: Separate query for each product's category
+       - Implementation: Add join with `addSelect()` to load related entities
+
+   - [ ] **Implement result pagination** ⭐ HIGH ROI
+       - Impact: High (limits data processing to visible subset)
+       - Complexity: Low (add LIMIT clause and page parameter)
+       - Current issue: Loading all products at once
+       - Implementation: Add limit/offset to query and return metadata
+
+   - [ ] **Replace in-memory sorting with database sorting** ⭐ HIGH ROI
+       - Impact: Medium (moves sorting work to database)
+       - Complexity: Low (add ORDER BY to query)
+       - Current issue: PHP array sorting on large result set
+       - Implementation: Add ORDER BY clause based on sort parameter
+
+   - [ ] **Add result caching for static catalog data** ⚠️ ONLY IF NEEDED
+       - Impact: Medium (eliminates redundant queries)
+       - Complexity: Medium (requires cache configuration)
+       - Note: Only implement if product data changes infrequently
+       - Implementation: Add cache annotations or explicit caching layer
+   </xml>
+
+## Step 2: Performance Validation
+
+Based on the checklist, validate each issue using the most direct approach:
+
+### Validation Methods
+
+1. **Code Review**: Identify inefficient patterns through static analysis
+2. **Query Analysis**: Examine database query plans and execution times
+3. **Performance Tests**: Create simple benchmarks for critical operations (only if needed)
+4. **Profiling**: Measure execution time and resource utilization of key functions
+
+### Performance Validation Guidelines
+
+- **Focus on Measurable Issues**: Prioritize issues that can be objectively validated.
+- **Use Simple Metrics**: Response time, query count, memory usage, etc.
+- **Avoid Assumptions**: Base recommendations on actual code, not theoretical issues.
+- **Consider Scale**: Assess if optimizations matter at the application's actual data volume.
+
+**Example Performance Test Snippet:**
+
+<xml>
+/**
+ * Simple benchmark for product listing endpoint
+ */
+public function testProductListingPerformance(): void
+{
+    // Arrange
+    $client = static::createClient();
+    
+    // Measure database queries
+    $queryCounter = new QueryCounter($entityManager);
+    
+    // Act & Measure
+    $startTime = microtime(true);
+    $client->request('GET', '/api/products?category=electronics');
+    $response = $client->getResponse();
+    $duration = microtime(true) - $startTime;
+    
+    // Log metrics
+    $this->addToAssertionCount(1); // Test passes, we're just collecting metrics
+    echo "Response time: {$duration}s, Query count: {$queryCounter->getCount()}\n";
+    echo "Memory used: " . (memory_get_peak_usage(true) / 1024 / 1024) . "MB\n";
+}
+</xml>
+
+## Step 3: Developer-Focused Recommendations
+
+For each validated issue, provide:
+
+1. **Issue**: Clear description of the performance problem
+2. **Simple Solution**: The most straightforward implementation that resolves the issue
+3. **Before/After Code**: Concise examples showing the change needed
+4. **Expected Impact**: Realistic performance improvement estimate
+
+**Example Recommendation Format:**
+
+<xml>
+### Fix N+1 Query Issue in Product Listing
+
+**Issue**: Each product triggers a separate query to load its category (N+1 problem)
+
+**Simple Solution**: Modify repository method to join and eagerly load categories
+
+**Implementation**:
+
+Before:
+<xml>
+// ProductRepository.php
+public function findByFilters(array $filters)
+{
+    return $this->createQueryBuilder('p')
+        ->where('p.category = :category')
+        ->setParameter('category', $filters['category'])
+        ->getQuery()
+        ->getResult();
+    // Categories loaded individually when accessed
+}
+</xml>
+
+After:
+<xml>
+// ProductRepository.php
+public function findByFilters(array $filters)
+{
+    return $this->createQueryBuilder('p')
+        ->leftJoin('p.category', 'c')
+        ->addSelect('c') // Eager load categories
+        ->where('p.category = :category')
+        ->setParameter('category', $filters['category'])
+        ->getQuery()
+        ->getResult();
+}
+</xml>
+
+**Expected Impact**:
+- Reduces queries from 1+N to just 1 (where N = number of products)
+- For 100 products: 101 queries → 1 query
+- Typical response time improvement: 50-300ms
+</xml>
+
+## Final Output Requirements
+
+The final performance analysis report should be practical, concise, and directly useful to developers, with:
+
+1. **Actionable Items**: Clear, concrete recommendations that developers can implement immediately.
+
+2. **Implementation Simplicity**: Prioritize simple solutions that provide substantial benefits:
+   - "Use database index" instead of "Redesign data architecture"
+   - "Add query join" instead of "Implement complex caching system"
+   - "Fix loop efficiency" instead of "Rewrite in lower-level language"
+
+3. **Practical Examples**:
+   - Show exact code changes needed
+   - Provide specific SQL statements, config changes, etc.
+   - Avoid vague advice like "optimize the query"
+
+4. **ROI Prioritization**:
+   - List high-impact, low-complexity changes first
+   - Clearly mark more complex changes as optional
+   - Include estimated performance impact of each change
+
+5. **Developer Context**:
+   - Consider the skills of the typical developer using the codebase
+   - Use the patterns and conventions already present in the code
+   - Avoid introducing unnecessary technology dependencies
+
+The report should enable a developer to quickly implement the most valuable performance improvements with minimal risk and complexity.

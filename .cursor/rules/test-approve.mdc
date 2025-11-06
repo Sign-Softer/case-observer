@@ -1,0 +1,7 @@
+---
+description: Submits approval for test execution plan.
+globs:
+alwaysApply: false
+---
+
+Start implementing the plan specified in the provided file path (e.g., `specs/tests/MyTestPlan.md` or `specs/implementations/MyImplPlan.md`). As you progress, keep checking off tests/tasks in the plan's TODO list as soon as you implement them.

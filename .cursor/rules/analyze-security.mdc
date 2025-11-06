@@ -1,0 +1,234 @@
+---
+description: Analyzes web applications for security vulnerabilities and provides developers with practical, prioritized fixes focusing on implementation simplicity and security impact.
+globs:
+alwaysApply: false
+---
+
+# Rule: Security Analysis and Validation
+
+## Objective
+Analyze the provided web application code, identify security vulnerabilities, and provide developers with a concise, actionable security checklist focusing on simple implementations that deliver meaningful security improvements without unnecessary complexity.
+
+## Step 1: Security Analysis and Checklist Creation
+
+1. **Understand the Application:** Briefly describe the purpose and functionality of the code being analyzed.
+2. **Identify Technology Stack:** List the core technologies and frameworks being used. Check for a file named `@project-overview.md` in the project root for this information.
+3. **Map Input/Output Points:** Identify all user input points, API endpoints, file operations, and data output mechanisms.
+4. **Create a Developer-Focused Security Checklist:**
+   * Generate a concise security checklist in markdown format.
+   * Organize by vulnerability type and implementation area.
+   * Focus on practical security fixes with simple implementations.
+   * Use a checklist format for clarity.
+   * Mark vulnerabilities as "Critical" (must fix), "High ROI" (simple fix, good security gain), or "Defense in Depth" (additional protection).
+   * For each item, specify the potential security impact and implementation complexity.
+
+   **Example Security Checklist Structure:**
+
+   <xml>
+   ### Security Checklist: UserRegistrationController.php
+
+   #### Code Purpose
+   Handles user registration, input validation, and account creation.
+
+   #### Technology Context
+   - PHP 8.1 / Symfony 6.2
+   - Doctrine ORM for database access
+   - Form handling with user-provided input
+   
+   #### Attack Surface
+   - POST /register endpoint (username, email, password fields)
+   - Database writes to users table
+   - Email sending functionality
+   - Session creation
+
+   #### Security Checklist
+
+   - [ ] **Input validation for XSS in username** ⚠️ CRITICAL
+       - Risk: Stored XSS attacks against all users viewing profiles
+       - Complexity: Low (add validation rule)
+       - Current issue: Username allows HTML tags without sanitization
+       - Implementation: Add regex pattern validation or use HTML purifier
+
+   - [ ] **Secure password handling** ⚠️ CRITICAL
+       - Risk: Password compromise if database is breached
+       - Complexity: Low (use framework password hasher)
+       - Current issue: Password using outdated MD5 hashing
+       - Implementation: Use Symfony PasswordHasher with bcrypt/Argon2
+
+   - [ ] **SQL injection protection** ⭐ HIGH ROI
+       - Risk: Database compromise through user input
+       - Complexity: Low (use parameterized queries)
+       - Current issue: Direct string concatenation in SQL
+       - Implementation: Use prepared statements/Doctrine parameters
+
+   - [ ] **CSRF protection for forms** ⭐ HIGH ROI
+       - Risk: Attackers can submit forms on user's behalf
+       - Complexity: Low (add CSRF token field)
+       - Current issue: Missing CSRF tokens on form submission
+       - Implementation: Add Symfony CSRF protection to form
+
+   - [ ] **Rate limiting for registration attempts** 🛡️ DEFENSE IN DEPTH
+       - Risk: Brute force attacks, DoS, account enumeration
+       - Complexity: Medium (requires rate limiting implementation)
+       - Current issue: No limit on registration attempts
+       - Implementation: Add IP-based request throttling
+   </xml>
+
+5. **CVE Assessment:**
+   * Based on the identified technology stack, perform online research to identify relevant CVEs that affect the versions in use.
+   * Include only directly applicable CVEs with clear remediation paths.
+
+## Step 2: Security Validation
+
+Using the checklist from Step 1, validate each security issue using the most appropriate method:
+
+### Validation Methods
+
+1. **Code Review**: Identify vulnerable patterns through static analysis
+2. **Security Tests**: Create targeted tests for specific vulnerabilities
+3. **Dependency Analysis**: Check for known vulnerable libraries
+4. **Interactive Testing**: Request permission for non-destructive security tests (when necessary)
+
+### Security Validation Guidelines
+
+- **Focus on Exploitable Issues**: Prioritize vulnerabilities that have a clear attack path.
+- **Consider Attack Context**: Assess if vulnerabilities are actually exploitable in the application's environment.
+- **Use Framework Security**: Leverage built-in security features of frameworks when available.
+- **Avoid Reinventing Security**: Prefer established security libraries over custom implementations.
+
+**Example Security Test Snippet:**
+
+<xml>
+/**
+ * Tests protection against XSS in username field
+ */
+public function testUsernameRejectsXssPayloads(): void
+{
+    // Arrange - Set up with various XSS attack patterns
+    $xssPayloads = [
+        '<script>alert("XSS")</script>',
+        'javascript:alert("XSS")',
+        '<img src="x" onerror="alert(\'XSS\')">',
+        '<body onload="alert(\'XSS\')">',
+    ];
+    
+    $client = static::createClient();
+    
+    foreach ($xssPayloads as $payload) {
+        // Act
+        $client->request('POST', '/register', [
+            'username' => $payload,
+            'email' => 'test@example.com',
+            'password' => 'SecureP@ssw0rd',
+            '_token' => $this->getCsrfToken(),
+        ]);
+        
+        // Assert
+        $this->assertResponseStatusCodeSame(400);
+        // Confirm the payload was not stored in database
+        $user = $this->userRepository->findOneBy(['username' => $payload]);
+        $this->assertNull($user, "XSS payload should not be stored: $payload");
+    }
+}
+</xml>
+
+### Interactive Testing Protocol
+
+When requesting permission to run interactive tests:
+
+1. **Explicit Permission**: Ask for specific permission before running any test.
+2. **Clear Description**: Explain exactly what the test will do and potential impacts.
+3. **Scope Limitation**: Ensure tests don't interact with production systems or corrupt data.
+
+**Example Permission Request Format:**
+
+<xml>
+I'd like to perform a non-destructive security test to verify XSS protection:
+
+Test: Submit registration form with JavaScript payload in username field
+Target: POST /register endpoint
+Method: Send controlled XSS payloads and verify rejection
+Impact: None - this is a validation-only test with no persistent effects
+
+May I proceed with this test?
+</xml>
+
+## Step 3: Developer-Focused Remediation
+
+For each validated security issue, provide:
+
+1. **Vulnerability**: Clear description of the security problem
+2. **Simple Fix**: The most straightforward implementation that resolves the issue
+3. **Before/After Code**: Concise examples showing the change needed
+4. **Security Impact**: What threats are mitigated by the fix
+
+**Example Remediation Format:**
+
+<xml>
+### Fix SQL Injection in User Search
+
+**Vulnerability**: SQL injection in search parameter allows arbitrary queries
+
+**Simple Fix**: Replace string concatenation with parameterized query
+
+**Implementation**:
+
+Before:
+<xml>
+// UserRepository.php
+public function findBySearchTerm($term)
+{
+    $sql = "SELECT * FROM users WHERE username LIKE '%" . $term . "%'";
+    return $this->getEntityManager()
+        ->getConnection()
+        ->executeQuery($sql)
+        ->fetchAllAssociative();
+}
+</xml>
+
+After:
+<xml>
+// UserRepository.php
+public function findBySearchTerm($term)
+{
+    $sql = "SELECT * FROM users WHERE username LIKE :term";
+    return $this->getEntityManager()
+        ->getConnection()
+        ->executeQuery($sql, ['term' => '%' . $term . '%'])
+        ->fetchAllAssociative();
+}
+</xml>
+
+**Security Impact**:
+- Prevents attackers from injecting malicious SQL commands
+- Protects against database compromise and data exfiltration
+- Removes vulnerability to both first-order and blind SQL injection
+</xml>
+
+## Final Output Requirements
+
+The final security analysis report should be practical, concise, and directly useful to developers, with:
+
+1. **Prioritized Vulnerabilities**: List issues by security impact, with critical issues first.
+
+2. **Implementation Simplicity**: Focus on simple, effective security fixes:
+   - "Use framework validation" instead of "Implement custom input sanitization"
+   - "Add CSRF token" instead of "Redesign the authentication system"
+   - "Apply parameterized queries" instead of "Add WAF and intrusion detection"
+
+3. **Clear Code Examples**:
+   - Show exact code changes needed to fix each vulnerability
+   - Provide specific configuration changes, framework usage examples, etc.
+   - Include both vulnerable and fixed code
+
+4. **Practical Context**:
+   - Note which vulnerabilities are actively exploitable vs. theoretical
+   - Differentiate between internet-facing and internal attack surfaces
+   - Consider the authentication context for each vulnerability
+
+5. **CVE Information** (when applicable):
+   - List specific affected dependencies with version numbers
+   - Provide simple update paths (e.g., "Update package X to version Y")
+   - Include links to CVE details for further information
+
+The report should enable a developer to quickly implement the most critical security fixes with minimal risk and complexity, while understanding the security impact of each change.

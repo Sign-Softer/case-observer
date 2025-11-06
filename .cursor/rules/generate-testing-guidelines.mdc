@@ -1,0 +1,138 @@
+---
+description: Analyzes a project's testing patterns and generates comprehensive testing standards documentation
+globs: 
+alwaysApply: false
+---
+
+# Rule: Generate Testing Standards Documentation
+
+## Objective
+* Create a comprehensive testing standards document based on analysis of the project's existing testing practices.
+
+## Process
+
+### 1. Find Test Files
+* Scan for files with common test extensions (`.test.js`, `.spec.js`, `Test.php`, etc.)
+* Locate test directories (`tests`, `__tests__`, `test`, etc.)
+* Count test files and map source-to-test file relationships
+
+### 2. Identify Testing Frameworks
+* Examine test imports/requires to identify frameworks
+* Check for framework configuration files
+* Note framework versions when available
+* Identify assertion libraries and mocking frameworks
+
+### 3. Analyze Test Execution Methods
+* Examine Makefiles for test targets
+* Check package files (package.json, setup.py, etc.) for test commands
+* Review CI configuration files for test execution steps
+* Document test execution commands and required environment variables
+
+### 4. Document Naming Conventions
+* Identify test file naming patterns
+* Document test case naming conventions
+* Map directory structure relationships
+
+### 5. Examine Testing Patterns
+* Identify test structures (Arrange-Act-Assert, BDD, etc.)
+* Document mocking approaches
+* Analyze test data generation methods
+* Note setup and teardown patterns
+
+### 6. Categorize Test Types
+* Identify unit tests, integration tests, E2E tests
+* Document organization of different test types
+* Note environment requirements per test type
+
+### 7. Document Test Coverage
+* Identify coverage tools and configuration
+* Note coverage thresholds
+* Document coverage report generation
+
+### 8. Create Documentation File
+* Generate `testing-standards.md` in project root
+* Include examples from actual codebase
+* Provide clear test execution instructions
+
+## Output Format Structure
+
+<xml>
+# Project Testing Standards
+
+## Overview
+* Brief overview of testing approach
+
+## Testing Frameworks & Libraries
+* Primary Framework: [name and version]
+* Assertion Library: [if applicable]
+* Mocking Framework: [if applicable]
+
+## Test Execution
+* Command-line examples:
+  <xml>
+  npm test
+  make test
+  </xml>
+* Common test commands table
+* Required environment setup
+* CI test execution process
+
+## Directory Structure & Organization
+* Test files organization overview
+* Example directory structure
+
+## Naming Conventions
+* Test Files: [pattern]
+* Test Suites: [pattern]
+* Test Cases: [pattern]
+
+## Test Types & Patterns
+* Unit Tests:
+  * Location
+  * Naming pattern
+  * Example
+  * Execution command
+* Integration Tests:
+  * Location
+  * Naming pattern
+  * Example
+  * Execution command
+* [Other test types]
+
+## Mocking Approach
+* Mock objects strategy
+* Mock functions/spies usage
+* External services mocking
+* Example from codebase
+
+## Test Data Management
+* Fixtures strategy
+* Database handling in tests
+* Seed data management
+
+## Test Coverage
+* Coverage tool used
+* Coverage targets
+* Report generation commands
+
+## Common Patterns & Utilities
+* Setup/teardown patterns
+* Helper functions
+* Custom assertions
+
+## Debugging Tests
+* Techniques
+* Tools
+
+## Best Practices
+* Project-specific guidelines
+</xml>
+
+## Implementation Guidelines
+
+* Base documentation on code evidence, not assumptions
+* Include representative code examples
+* Document multiple approaches if they exist
+* Pay special attention to Makefiles and test execution scripts
+* Document environment requirements for tests
+* Save as `testing-standards.md` in project root

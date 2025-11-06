@@ -1,0 +1,158 @@
+---
+description: Guidelines for creating a TDD-focused implementation plan for a user story/issue that respects project boundaries, tech stack, and existing testing patterns
+globs: 
+alwaysApply: false
+---
+
+# Rule: TDD Implementation Plan Creation
+
+## Objective
+Analyze the provided user story/issue description and create a pragmatic, Test-Driven Development (TDD) implementation plan that respects project boundaries, tech stack constraints, and existing testing practices.
+
+## Step 1: Understanding the Context
+
+1. **Identify Technology Stack:** First check for a file named `specs/project-overview.md` to understand the complete technology landscape. If unavailable, infer from the codebase.
+2. **Determine Project Scope:** Understand which components (backend, frontend, etc.) are within the current project's scope and which might be in separate projects.
+3. **Identify Testing Patterns:** First check for a file named `@testing-standards.md` in the project root. If it exists, use this document as the reference for testing frameworks, patterns, and conventions. If it doesn't exist, examine existing test files to determine:
+   - What testing frameworks and libraries are being used (Jest, Mocha, PHPUnit, etc.)
+   - Test file naming conventions and organization
+   - Common testing patterns and styles (mocking approaches, test structure)
+   - Types of tests being written (unit, integration, e2e, etc.)
+   - Generate a `@testing-standards.md` file for future reference using the "Generate Testing Standards Documentation" rule
+4. **Analyze User Story:** Extract the core requirements and acceptance criteria.
+
+## Step 2: Create the Implementation Plan
+
+Create a focused, Test-Driven Development (TDD) implementation plan in markdown format. Include:
+
+1. **Brief summary of the user story/issue goal.**
+2. **List of acceptance criteria.**
+3. **Project Context:** Briefly describe the identified technology stack, project boundaries, and testing approach.
+4. **Identification of core components/modules involved** (inferring from codebase if possible).
+5. **Test Definition:** Detailed test cases derived directly from the acceptance criteria. Define *what* needs to be tested and the expected outcomes *before* outlining implementation steps. Only include tests relevant to the current project scope and **follow existing test patterns and frameworks** in the project.
+6. **Implementation Tasks (TDD Flow):** Tasks ordered to follow TDD:
+    - Write a failing test for a small piece of functionality.
+    - Write the minimum code required to make the test pass.
+    - Refactor the code while ensuring tests still pass.
+7. **Cross-Project Considerations:** If implementation spans multiple projects (e.g., backend/frontend):
+    - For components outside current project scope, provide general implementation guidelines rather than detailed steps.
+    - Define clear interface contracts between components (e.g., API specifications).
+    - DO NOT force implementations if the tech stack doesn't match the current project.
+
+8. **Crucially:** If critical details required for a complete plan or test definition are missing and cannot be reasonably inferred, **explicitly list these as questions** before generating the test definitions and tasks.
+
+Structure the final plan with test definitions first, followed by implementation tasks structured as a TDD checklist.
+DO NOT include vague placeholders. Use the questions section if needed.
+
+Save the complete implementation plan (including any preliminary questions, if applicable) to a file named `specs/implementations/implementation-plan.md`.
+
+## Example Implementation Plan (Multi-Project Context)
+
+<xml>
+# Implementation Plan: Add User Profile Bio (TDD)
+
+## Goal
+Allow users to add and display a short biography on their profile via TDD.
+
+## Project Context
+According to `@project-overview.md`, this is a **backend-only Node.js/Express API project**. The frontend is a separate React application. This plan focuses on backend implementation with interface guidelines for the frontend team.
+
+**Testing Approach**: The project uses Jest for testing with Supertest for API testing. Unit tests are stored in `__tests__` directories next to the implementation files. Mock data is defined in a central `__mocks__` directory, and tests follow AAA (Arrange-Act-Assert) pattern.
+
+## Acceptance Criteria
+- Users can input and save a bio (max 500 chars).
+- Bio is displayed on the user's public profile page.
+- Input is sanitized to prevent XSS.
+- API endpoint exists to update the bio.
+- Database schema is updated to store the bio.
+
+## Core Components Involved (Backend Only)
+- `UserController.js`
+- `UserService.js`
+- `User` mongoose model
+- `routes/user.js`
+- Relevant test files
+
+## Test Definitions (Backend)
+
+- **Unit Tests (`__tests__/UserService.test.js`)**
+    - Test `updateUserBio` successfully updates bio for valid input.
+    - Test `updateUserBio` throws error for bio exceeding 500 chars.
+    - Test `updateUserBio` correctly sanitizes input containing potential XSS.
+    - Test `updateUserBio` handles null/empty input gracefully.
+    
+- **API Tests (`__tests__/routes/user.test.js`)**
+    - Test PATCH `/api/users/me/bio` returns 200 OK for valid request.
+    - Test PATCH `/api/users/me/bio` returns 400 Bad Request for bio > 500 chars.
+    - Test PATCH `/api/users/me/bio` returns 401 Unauthorized if user not authenticated.
+    - Test database record reflects the updated, sanitized bio after API call.
+
+## Implementation Tasks (TDD Flow)
+
+- [ ] **Database Schema**
+    - [ ] Write failing test that expects User model to have a bio field.
+    - [ ] Add `bio` field (String, max 500, nullable) to `User` model. Make test pass.
+    - [ ] Refactor if needed while ensuring tests pass.
+
+- [ ] **Backend: Service Logic (`UserService.js`)**
+    - [ ] Write failing unit test: `updateUserBio` throws error for bio > 500 chars.
+    - [ ] Implement length validation in `updateUserBio` to make test pass. Refactor.
+    - [ ] Write failing unit test: `updateUserBio` sanitizes `<script>` tag.
+    - [ ] Add sanitization logic to `updateUserBio`. Make test pass. Refactor.
+    - [ ] Write failing unit test: `updateUserBio` updates user bio in DB mock.
+    - [ ] Add DB update logic to `updateUserBio`. Make test pass. Refactor.
+    - [ ] Write remaining unit tests and implement necessary logic.
+
+- [ ] **Backend: API Endpoint**
+    - [ ] Write failing API test: PATCH `/api/users/me/bio` returns 401 if unauthenticated.
+    - [ ] Add authentication middleware to route. Make test pass. Refactor.
+    - [ ] Write failing API test: PATCH `/api/users/me/bio` returns 400 for bio > 500 chars.
+    - [ ] Add route handler in `UserController` calling `UserService.updateUserBio`, handle validation errors. Make test pass. Refactor.
+    - [ ] Write failing API test: PATCH `/api/users/me/bio` returns 200 and updates DB for valid input.
+    - [ ] Complete route handler logic. Make test pass. Refactor.
+    - [ ] Write remaining API tests and implement necessary logic.
+
+## API Contract for Frontend Team
+The following API specification should be implemented by the frontend team:
+
+**Endpoint:** PATCH `/api/users/me/bio`  
+**Authentication:** Required (JWT in Authorization header)  
+**Request Body:**
+<xml>
+{
+  "bio": "User biography text (max 500 chars)"
+}
+</xml>
+**Responses:**
+- 200 OK: Bio updated successfully
+- 400 Bad Request: Bio exceeds 500 chars or contains invalid content
+- 401 Unauthorized: Missing or invalid authentication
+- 500 Internal Server Error: Server-side error
+
+## Frontend Implementation Guidelines (Separate Project)
+For the frontend team implementing in the React application:
+
+- Create a bio textarea input in the profile edit component with character counter
+- Add validation to prevent submission of text > 500 chars
+- Implement PATCH request to the API endpoint when user saves
+- Update profile view component to display the sanitized bio text
+- Consider adding a loading state while the bio is being saved
+- Handle API error responses appropriately in the UI
+
+*Note: This is an external project. Detailed frontend implementation steps and tests are not included in this plan.*
+</xml>
+
+## Final Output Requirements
+
+The final implementation plan should be:
+
+1. **Scope-Aware**: Clearly distinguish between what's within the current project scope and what's in external projects.
+2. **Stack-Appropriate**: Only specify implementation details compatible with the identified tech stack.
+3. **Test-Framework Aligned**: Use the same testing frameworks, patterns, and conventions already established in the project.
+4. **Practically Testable**: Include only tests that can be written within the project's boundaries.
+5. **Contract-Focused**: When crossing project boundaries, focus on defining clear contracts rather than implementation details.
+6. **TDD-Structured**: Maintain the Red-Green-Refactor cycle in all implementation tasks.
+
+DO NOT force implementations for technologies not present in the project. DO provide API contracts or interface guidelines instead. DO follow existing test patterns rather than introducing new testing approaches.
+
+Save the complete implementation plan to `specs/implementations/implementation-plan.md`.
