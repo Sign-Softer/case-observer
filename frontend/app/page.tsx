@@ -1,23 +1,23 @@
+import Navigation from './components/layout/Navigation';
+import Hero from './components/sections/Hero';
+import CaseSearchSection from './components/sections/CaseSearchSection';
+import Features from './components/sections/Features';
+import HowItWorks from './components/sections/HowItWorks';
+import Benefits from './components/sections/Benefits';
+import CTA from './components/sections/CTA';
+import Footer from './components/layout/Footer';
+
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm">
-        <h1 className="text-4xl font-bold text-center mb-8">
-          Case Observer
-        </h1>
-        <p className="text-center text-lg mb-8">
-          Automated Court Case Monitoring System
-        </p>
-        <div className="flex justify-center gap-4">
-          <a
-            href="/login"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            Login
-          </a>
-        </div>
-      </div>
-    </main>
+    <div className="min-h-screen bg-white">
+      <Navigation />
+      <Hero />
+      <CaseSearchSection />
+      <Features />
+      <HowItWorks />
+      <Benefits />
+      <CTA />
+      <Footer />
+    </div>
   );
 }
-
