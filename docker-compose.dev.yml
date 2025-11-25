@@ -44,6 +44,10 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost/api
       - NODE_ENV=development
+      - WATCHPACK_POLLING=true  # Enable polling for file watching in Docker
+      - CHOKIDAR_USEPOLLING=true  # Enable polling for Chokidar (file watcher)
+    ports:
+      - "3000:3000"  # Expose frontend on host port 3000
     volumes:
       - ./frontend:/app
       - /app/node_modules
