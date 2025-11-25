@@ -34,32 +34,8 @@ services:
     networks:
       - case-observer-network
 
-  # Spring Boot Application (optional - run locally for hot reload)
-  backend-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile.backend
-    container_name: cs-java
-    environment:
-      - SPRING_PROFILES_ACTIVE=dev
-      - DB_HOST=mysql-dev
-      - DB_PORT=3306
-      - DB_NAME=observer_dev
-      - DB_USERNAME=root
-      - DB_PASSWORD=12345
-      - JWT_SECRET=dev-secret-key-change-in-production-minimum-32-characters-long
-    ports:
-      - "8080:8080"
-    depends_on:
-      mysql-dev:
-        condition: service_healthy
-      redis-dev:
-        condition: service_healthy
-    networks:
-      - case-observer-network
-    command: ["--spring.profiles.active=dev"]
-
   # Next.js Frontend Application
+  # ✅ Hot reload enabled via volume mounts - changes reflect instantly!
   frontend-dev:
     build:
       context: ./frontend
@@ -72,13 +48,14 @@ services:
       - ./frontend:/app
       - /app/node_modules
       - /app/.next
-    depends_on:
-      - backend-dev
+    # Frontend can run independently - backend runs locally on :8080
     networks:
       - case-observer-network
     command: npm run dev
 
   # Nginx Reverse Proxy
+  # Routes /api/* to backend (localhost:8080 when running locally)
+  # Routes /* to frontend (container:3000)
   nginx-dev:
     image: nginx:alpine
     container_name: cs-nginx
@@ -87,8 +64,10 @@ services:
     volumes:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - backend-dev
       - frontend-dev
+    # Backend runs locally, so no container dependency needed
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Allows nginx to reach localhost:8080
     networks:
       - case-observer-network
     restart: unless-stopped
