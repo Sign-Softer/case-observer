@@ -44,6 +44,7 @@ services:
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost/api
       - NODE_ENV=development
+      - BACKEND_URL=http://host.docker.internal:8080  # Backend URL for Next.js rewrites
       - WATCHPACK_POLLING=true  # Enable polling for file watching in Docker
       - CHOKIDAR_USEPOLLING=true  # Enable polling for Chokidar (file watcher)
     ports:
@@ -53,6 +54,8 @@ services:
       - /app/node_modules
       - /app/.next
     # Frontend can run independently - backend runs locally on :8080
+    extra_hosts:
+      - "host.docker.internal:host-gateway"  # Allows frontend to reach localhost backend
     networks:
       - case-observer-network
     command: npm run dev
