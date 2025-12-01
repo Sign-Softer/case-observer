@@ -90,10 +90,10 @@ public class MonitoringController {
         try {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             String username = auth.getName();
-            
+
             // Get user ID from username (you might need to implement this)
             // For now, we'll use a placeholder approach
-            List<Notification> notifications = notificationService.getNotificationsForUser(1L); // TODO: Get actual user ID
+            List<Notification> notifications = notificationService.getNotificationsForUser(3L); // TODO: Get actual user ID
             
             List<NotificationResponseDto> notificationDtos = notifications.stream()
                     .map(this::mapToNotificationDto)
