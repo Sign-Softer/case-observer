@@ -69,17 +69,12 @@ export const authApi = {
 
   /**
    * Get current user info
-   * Note: Backend returns list of users, we'll get the first one for now
-   * In production, you might want to add a /api/users/me endpoint
+   * @deprecated Use usersApi.getCurrentUser() instead
    */
   async getCurrentUser(): Promise<User> {
-    // Backend returns array, we'll use the first user
-    // This is a temporary solution - ideally backend should have /api/users/me
-    const users = await apiClient.get<User[]>('/api/users');
-    if (users && Array.isArray(users) && users.length > 0) {
-      return users[0];
-    }
-    throw new Error('User not found');
+    // Use the new users API endpoint
+    const { usersApi } = await import('./users');
+    return usersApi.getCurrentUser();
   },
 };
 

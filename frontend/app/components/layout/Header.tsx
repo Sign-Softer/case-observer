@@ -64,22 +64,15 @@ export default function Header() {
                   />
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
                     <div className="px-4 py-2 border-b border-gray-200">
-                      <p className="text-sm font-semibold text-gray-900">{user?.username}</p>
-                      <p className="text-xs text-gray-500">{user?.email || 'No email'}</p>
+                      <p className="text-sm font-semibold text-gray-900">{user?.username || 'User'}</p>
+                      <p className="text-xs text-gray-500">{user?.email || ''}</p>
                     </div>
                     <a
-                      href="/dashboard"
+                      href="/settings"
                       className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setShowUserMenu(false)}
                     >
-                      Dashboard
-                    </a>
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setShowUserMenu(false)}
-                    >
-                      Settings
+                      Profile Settings
                     </a>
                     <button
                       onClick={() => {

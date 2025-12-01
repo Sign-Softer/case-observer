@@ -10,6 +10,7 @@ interface AuthContextType extends AuthState {
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   refreshToken: () => Promise<void>;
+  updateUser: (user: User) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,15 +21,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Check if user is authenticated on mount
+  // Check if user is authenticated on mount and load user data
   useEffect(() => {
     const checkAuth = async () => {
       if (tokenStorage.hasTokens()) {
-        // For now, we just check if tokens exist
-        // In a real app, you might want to decode JWT to get user info
-        // or have a /api/users/me endpoint
         setIsAuthenticated(true);
-        // User info will be set on next login
+        // Fetch user data if tokens exist
+        try {
+          const { usersApi } = await import('../api/users');
+          const userData = await usersApi.getCurrentUser();
+          setUser({
+            username: userData.username,
+            email: userData.email,
+            // Role is not in profile DTO, keep existing role if available
+            // Role will be set on login from JWT token
+          });
+        } catch (err) {
+          // If fetching user fails, tokens might be invalid
+          console.warn('Failed to fetch user data:', err);
+          // Don't clear tokens here, let the user try to use the app
+          // If API calls fail with 401, they'll be logged out automatically
+        }
       } else {
         setIsAuthenticated(false);
       }
@@ -45,12 +58,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authApi.login(credentials);
       
-      // Get user info after successful login
-      // Note: Backend /api/users returns all users, so we create user from login response
+      // Get full user info after successful login - this is required
+      const { usersApi } = await import('../api/users');
+      const userData = await usersApi.getCurrentUser();
       setUser({
-        username: credentials.username,
-        email: '', // Email not in login response, will be empty for now
-        role: response.role,
+        username: userData.username,
+        email: userData.email,
+        role: response.role, // Role comes from login response
       });
       
       setIsAuthenticated(true);
@@ -96,6 +110,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [logout]);
 
+  const updateUser = useCallback((updatedUser: User) => {
+    setUser(updatedUser);
+  }, []);
+
   const value: AuthContextType = {
     user,
     isAuthenticated,
@@ -105,6 +123,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     register,
     logout,
     refreshToken,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

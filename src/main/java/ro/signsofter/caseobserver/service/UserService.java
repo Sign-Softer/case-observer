@@ -26,6 +26,10 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    public Optional<User> getUserByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
     public User createUser(User user) {
         if (user.getPassword() != null && !user.getPassword().isBlank() && !isBCryptHash(user.getPassword())) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -47,6 +51,46 @@ public class UserService {
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    /**
+     * Update user profile (email only, username cannot be changed)
+     */
+    public User updateUserProfile(String username, String email) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Check if email is already taken by another user
+        userRepository.findByEmail(email).ifPresent(existingUser -> {
+            if (!existingUser.getId().equals(user.getId())) {
+                throw new RuntimeException("Email already in use");
+            }
+        });
+        
+        user.setEmail(email);
+        return userRepository.save(user);
+    }
+
+    /**
+     * Change user password
+     */
+    public void changePassword(String username, String currentPassword, String newPassword) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Verify current password
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new RuntimeException("Current password is incorrect");
+        }
+        
+        // Validate new password (basic validation)
+        if (newPassword == null || newPassword.length() < 6) {
+            throw new RuntimeException("New password must be at least 6 characters");
+        }
+        
+        // Update password
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 
     private boolean isBCryptHash(String raw) {
