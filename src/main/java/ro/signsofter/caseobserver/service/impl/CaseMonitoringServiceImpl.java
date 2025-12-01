@@ -1,5 +1,6 @@
 package ro.signsofter.caseobserver.service.impl;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -71,8 +72,15 @@ public class CaseMonitoringServiceImpl implements CaseMonitoringService {
     @Override
     @Transactional
     public void checkCaseForUpdates(Long caseId) throws PortalQueryException {
+        // Fetch the case normally
         CourtCase courtCase = courtCaseRepository.findById(caseId)
                 .orElseThrow(() -> new IllegalArgumentException("Case not found with id " + caseId));
+        
+        // Explicitly initialize the lazy collections within the transaction
+        // This prevents LazyInitializationException when accessing them later
+        // Hibernate.initialize() forces the collections to be loaded while the session is still open
+        Hibernate.initialize(courtCase.getHearings());
+        Hibernate.initialize(courtCase.getParties());
         
         if (!courtCase.getMonitoringEnabled()) {
             System.out.println("Case " + caseId + " monitoring is disabled, skipping check");

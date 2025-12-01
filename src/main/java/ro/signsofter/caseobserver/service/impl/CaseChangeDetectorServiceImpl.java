@@ -1,6 +1,7 @@
 package ro.signsofter.caseobserver.service.impl;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ro.signsofter.caseobserver.entity.CourtCase;
 import ro.signsofter.caseobserver.entity.Hearing;
 import ro.signsofter.caseobserver.entity.Party;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 public class CaseChangeDetectorServiceImpl implements CaseChangeDetectorService {
 
     @Override
+    @Transactional(readOnly = true)
     public CaseChanges detectChanges(CourtCase existingCase, CaseDetailsDto newData) {
         CaseChanges changes = new CaseChanges();
         

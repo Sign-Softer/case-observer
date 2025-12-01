@@ -54,6 +54,51 @@ public class CourtCaseService {
                 .collect(Collectors.toList());
     }
 
+    public List<CourtCase> getCasesForUserWithFilters(String username, String search, String status, 
+                                                      Boolean monitoringEnabled, String courtName, String sortBy) {
+        List<CourtCase> cases = userCaseRepository.findCasesWithFilters(username, search, status, monitoringEnabled, courtName, sortBy)
+                .stream()
+                .map(UserCase::getCourtCase)
+                .collect(Collectors.toList());
+        
+        // Apply sorting in Java (simpler than complex JPQL CASE statements)
+        if (sortBy != null && !sortBy.isEmpty()) {
+            switch (sortBy) {
+                case "caseNumber":
+                    cases.sort((a, b) -> {
+                        if (a.getCaseNumber() == null) return 1;
+                        if (b.getCaseNumber() == null) return -1;
+                        return a.getCaseNumber().compareTo(b.getCaseNumber());
+                    });
+                    break;
+                case "status":
+                    cases.sort((a, b) -> {
+                        if (a.getStatus() == null) return 1;
+                        if (b.getStatus() == null) return -1;
+                        return a.getStatus().compareTo(b.getStatus());
+                    });
+                    break;
+                case "lastUpdated":
+                default:
+                    cases.sort((a, b) -> {
+                        if (a.getLastUpdated() == null) return 1;
+                        if (b.getLastUpdated() == null) return -1;
+                        return b.getLastUpdated().compareTo(a.getLastUpdated()); // Descending
+                    });
+                    break;
+            }
+        } else {
+            // Default: sort by lastUpdated descending
+            cases.sort((a, b) -> {
+                if (a.getLastUpdated() == null) return 1;
+                if (b.getLastUpdated() == null) return -1;
+                return b.getLastUpdated().compareTo(a.getLastUpdated());
+            });
+        }
+        
+        return cases;
+    }
+
     public Optional<CourtCase> getCaseById(Long id) {
         return courtCaseRepository.findById(id);
     }

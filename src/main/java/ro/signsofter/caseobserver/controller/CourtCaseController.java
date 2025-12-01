@@ -27,9 +27,24 @@ public class CourtCaseController {
     }
 
     @GetMapping
-    public List<CourtCaseResponseDto> listCases() {
+    public List<CourtCaseResponseDto> listCases(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) Boolean monitoringEnabled,
+            @RequestParam(required = false) String courtName,
+            @RequestParam(required = false) String sortBy
+    ) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String username = auth.getName();
+        
+        // If any filter is provided, use filtered query, otherwise use simple query
+        if (search != null || status != null || monitoringEnabled != null || courtName != null || sortBy != null) {
+            return courtCaseService.getCasesForUserWithFilters(username, search, status, monitoringEnabled, courtName, sortBy)
+                    .stream()
+                    .map(CourtCaseMapper::toDto)
+                    .collect(Collectors.toList());
+        }
+        
         return courtCaseService.getCasesForUser(username).stream()
                 .map(CourtCaseMapper::toDto)
                 .collect(Collectors.toList());

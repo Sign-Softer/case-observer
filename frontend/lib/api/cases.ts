@@ -59,12 +59,34 @@ export interface CaseDetails {
   hearings?: Hearing[];
 }
 
+export interface CaseFilters {
+  search?: string;
+  status?: string;
+  monitoringEnabled?: boolean;
+  courtName?: string;
+  sortBy?: 'lastUpdated' | 'caseNumber' | 'status';
+}
+
 export const casesApi = {
   /**
-   * Get all cases for the current user
+   * Get all cases for the current user with optional filters
    */
-  async getCases(): Promise<CourtCase[]> {
-    return apiClient.get<CourtCase[]>('/api/cases');
+  async getCases(filters?: CaseFilters): Promise<CourtCase[]> {
+    const params = new URLSearchParams();
+    
+    if (filters) {
+      if (filters.search) params.append('search', filters.search);
+      if (filters.status) params.append('status', filters.status);
+      if (filters.monitoringEnabled !== undefined) {
+        params.append('monitoringEnabled', filters.monitoringEnabled.toString());
+      }
+      if (filters.courtName) params.append('courtName', filters.courtName);
+      if (filters.sortBy) params.append('sortBy', filters.sortBy);
+    }
+    
+    const queryString = params.toString();
+    const url = queryString ? `/api/cases?${queryString}` : '/api/cases';
+    return apiClient.get<CourtCase[]>(url);
   },
 
   /**
