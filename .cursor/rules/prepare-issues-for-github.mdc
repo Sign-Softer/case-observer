@@ -1,0 +1,144 @@
+---
+description: Prepare issues in standardized format for automatic GitHub issue creation
+globs: 
+alwaysApply: false
+---
+
+# Prepare Issues for GitHub
+
+## Purpose
+This rule guides the AI to prepare issues in a standardized format that can be automatically converted to GitHub issues using the `create_github_issues.sh` script.
+
+## Output File
+**All prepared issues MUST be written to:** `PREPARED-ISSUES.md`
+
+This file will be used by the `tools/github-issues/create_github_issues.sh` script to create GitHub issues automatically.
+
+## Issue Format
+
+Each issue must follow this exact format:
+
+```markdown
+## Use Case X: [Use Case Name]
+
+### 🔴 BLOCKING Issues / 🟡 DEGRADING Issues / 🟢 MINOR Issues
+
+- **[ISSUE-ID]**: [Issue Title]
+- **Impact**: [Description of impact]
+- **Risk**: [Risk level - CRITICAL / HIGH / MEDIUM / LOW] - [Risk description]
+- **Fix Priority**: [Priority number] ([Optional description])
+- **Code reference**: 
+```[file:line:path]
+[code snippet]
+```
+- **Suggested solution**: 
+```[language]
+[code solution]
+```
+
+---
+```
+
+## Required Fields
+
+1. **Issue ID**: Must follow pattern `[PREFIX]-[NUMBER]` (e.g., `BACKEND-002`, `FRONTEND-010`)
+2. **Impact**: Clear description of what the issue affects
+3. **Risk**: Must include risk level (CRITICAL, HIGH, MEDIUM, LOW) followed by description
+4. **Fix Priority**: Numeric priority (1 = highest, 5 = lowest)
+5. **Code reference**: Code snippet showing where the problem exists, using format:
+   ```[startLine:endLine:filepath]
+   [code content]
+   ```
+6. **Suggested solution**: Code snippet showing the fix, using standard markdown code blocks with language tag
+
+## Issue Categories
+
+Issues should be organized by Use Case sections. Each use case should have:
+- A header: `## Use Case X: [Name]`
+- Sub-sections for issue severity: `### 🔴 BLOCKING Issues`, `### 🟡 DEGRADING Issues`, `### 🟢 MINOR Issues`
+
+## Code Reference Format
+
+Code references MUST use the format:
+```[startLine:endLine:filepath]
+[actual code content]
+```
+
+Example:
+```76:76:src/main/java/ro/signsofter/caseobserver/controller/AuthController.java
+public record RegisterRequest(@NotBlank String username, @NotBlank String email, @NotBlank String password) {}
+```
+
+## Solution Format
+
+Solutions MUST use standard markdown code blocks with language tags:
+
+```java
+// Solution code here
+```
+
+## Separator
+
+Each issue MUST be separated by:
+```markdown
+---
+```
+
+## Example
+
+```markdown
+## Use Case 1: User Registration & Onboarding
+
+### 🔴 BLOCKING Issues
+
+- **BACKEND-002**: Password validation not enforced
+- **Impact**: Weak passwords allowed, security risk
+- **Risk**: CRITICAL - Security vulnerability
+- **Fix Priority**: 1 (Must fix before production)
+- **Code reference**: 
+```76:76:src/main/java/ro/signsofter/caseobserver/controller/AuthController.java
+public record RegisterRequest(@NotBlank String username, @NotBlank String email, @NotBlank String password) {}
+```
+- **Suggested solution**: 
+```java
+public record RegisterRequest(
+    @NotBlank @Size(min=3, max=50) @Pattern(regexp="^[a-zA-Z0-9_-]+$") String username,
+    @NotBlank @Email String email,
+    @NotBlank @Size(min=8) @Pattern(regexp="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$") String password
+) {}
+```
+
+---
+```
+
+## Important Notes
+
+1. **File Location**: Always write to `PREPARED-ISSUES.md` in the project root
+2. **Append vs Overwrite**: When adding new issues, append to the file unless explicitly asked to replace it
+3. **Code References**: Must use the exact format `[startLine:endLine:filepath]` for code references
+4. **Code Solutions**: Use standard markdown code blocks with language tags (e.g., ````java`, ````typescript`)
+5. **Separators**: Always include `---` between issues
+6. **Use Cases**: Group issues by use case when possible
+7. **Risk Levels**: Always include the risk level (CRITICAL/HIGH/MEDIUM/LOW) in the Risk field
+
+## When to Use This Rule
+
+- When preparing issues from code reviews
+- When documenting bugs or improvements
+- When creating issues from analysis documents
+- When converting findings into actionable GitHub issues
+
+## Integration with Script
+
+The prepared issues in `PREPARED-ISSUES.md` can be automatically converted to GitHub issues using:
+
+```bash
+bash tools/github-issues/create_github_issues.sh [--dry-run] [--limit N]
+```
+
+The script will:
+- Parse `PREPARED-ISSUES.md`
+- Extract all issues
+- Create GitHub issues with proper formatting
+- Assign labels automatically
+- Include use case, category, and priority information

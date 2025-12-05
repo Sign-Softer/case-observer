@@ -14,5 +14,7 @@ public class UserProfileDto {
     @Email
     @NotBlank
     private String email;
+
+    private String role; // Role is needed for frontend context (e.g., UI permissions), but not displayed in profile settings UI
 }
 

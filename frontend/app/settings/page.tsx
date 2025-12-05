@@ -13,14 +13,21 @@ import { useRouter } from 'next/navigation';
 export default function SettingsPage() {
   const { user: authUser, logout, updateUser } = useAuth();
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>(authUser); // Initialize with authUser from context
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
 
   useEffect(() => {
-    loadUser();
-  }, []);
+    // If authUser is available, set it directly, no need to load again
+    if (authUser) {
+      setUser(authUser);
+      setLoading(false);
+    } else {
+      // If not in context, try to load (e.g., on direct page access)
+      loadUser();
+    }
+  }, [authUser]); // Depend on authUser
 
   const loadUser = async () => {
     setLoading(true);
@@ -28,6 +35,7 @@ export default function SettingsPage() {
     try {
       const data = await usersApi.getCurrentUser();
       setUser(data);
+      updateUser(data); // Update context with full user data
     } catch (err: any) {
       setError(err.message || 'Failed to load user profile');
       console.error('Error loading user:', err);
@@ -43,12 +51,7 @@ export default function SettingsPage() {
 
   const handleProfileUpdate = (updatedUser: User) => {
     setUser(updatedUser);
-    // Update auth context immediately
-    updateUser({
-      username: updatedUser.username,
-      email: updatedUser.email,
-      role: authUser?.role, // Keep existing role from auth context
-    });
+    updateUser(updatedUser); // Update auth context with full user data including role
   };
 
   if (loading) {

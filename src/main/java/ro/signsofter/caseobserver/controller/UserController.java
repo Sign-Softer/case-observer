@@ -49,6 +49,7 @@ public class UserController {
             dto.setId(u.getId());
             dto.setUsername(u.getUsername());
             dto.setEmail(u.getEmail());
+            dto.setRole(u.getRole().name()); // Include role for frontend context
             return ResponseEntity.ok(dto);
         }).orElseGet(() -> ResponseEntity.notFound().build());
     }
@@ -65,6 +66,7 @@ public class UserController {
         dto.setId(updated.getId());
         dto.setUsername(updated.getUsername());
         dto.setEmail(updated.getEmail());
+        dto.setRole(updated.getRole().name()); // Include role for frontend context
         return ResponseEntity.ok(dto);
     }
 

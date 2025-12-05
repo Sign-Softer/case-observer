@@ -26,15 +26,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const checkAuth = async () => {
       if (tokenStorage.hasTokens()) {
         setIsAuthenticated(true);
-        // Fetch user data if tokens exist
+        // Fetch user data if tokens exist - this ensures username and email are always present
         try {
           const { usersApi } = await import('../api/users');
           const userData = await usersApi.getCurrentUser();
           setUser({
             username: userData.username,
             email: userData.email,
-            // Role is not in profile DTO, keep existing role if available
-            // Role will be set on login from JWT token
+            role: userData.role, // Role comes from API response
           });
         } catch (err) {
           // If fetching user fails, tokens might be invalid
@@ -58,13 +57,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await authApi.login(credentials);
       
-      // Get full user info after successful login - this is required
+      // Get full user info after successful login - this ensures username and email are always present
       const { usersApi } = await import('../api/users');
       const userData = await usersApi.getCurrentUser();
       setUser({
         username: userData.username,
         email: userData.email,
-        role: response.role, // Role comes from login response
+        role: userData.role || response.role, // Prefer role from user API, fallback to login response
       });
       
       setIsAuthenticated(true);

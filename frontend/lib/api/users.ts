@@ -1,10 +1,10 @@
 import { apiClient } from './client';
 
 export interface User {
-  id: number;
+  id?: number;
   username: string;
   email: string;
-  role?: string; // Only for auth context, not from profile API
+  role?: string; // Role is included in profile API response for frontend context
 }
 
 export interface UpdateProfileRequest {
