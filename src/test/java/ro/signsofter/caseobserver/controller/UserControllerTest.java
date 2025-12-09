@@ -155,7 +155,7 @@ class UserControllerTest {
         String request = """
                 {
                     "currentPassword": "CurrentPass123!",
-                    "newPassword": "Pass1!"
+                    "newPassword": "Valid1!"
                 }
                 """;
 
