@@ -2,6 +2,8 @@ package ro.signsofter.caseobserver.controller;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -102,7 +104,17 @@ public class UserController {
     // mapping moved to UserMapper
 
     public record UpdateProfileRequest(@NotBlank String email) {}
-    public record ChangePasswordRequest(@NotBlank String currentPassword, @NotBlank String newPassword) {}
+    
+    public record ChangePasswordRequest(
+            @NotBlank String currentPassword,
+            @NotBlank 
+            @Size(min=8, message="Password must be at least 8 characters long") 
+            @Pattern(
+                regexp="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&#]{8,}$",
+                message="Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&)"
+            ) 
+            String newPassword
+    ) {}
 }
 
 

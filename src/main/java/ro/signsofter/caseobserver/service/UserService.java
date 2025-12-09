@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import ro.signsofter.caseobserver.entity.User;
+import ro.signsofter.caseobserver.exception.IncorrectPasswordException;
 import ro.signsofter.caseobserver.repository.UserRepository;
 
 import java.util.List;
@@ -73,6 +74,7 @@ public class UserService {
 
     /**
      * Change user password
+     * Note: Password validation is handled by Bean Validation annotations on ChangePasswordRequest
      */
     public void changePassword(String username, String currentPassword, String newPassword) {
         User user = userRepository.findByUsername(username)
@@ -80,15 +82,10 @@ public class UserService {
         
         // Verify current password
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
-            throw new RuntimeException("Current password is incorrect");
+            throw new IncorrectPasswordException("Current password is incorrect");
         }
         
-        // Validate new password (basic validation)
-        if (newPassword == null || newPassword.length() < 6) {
-            throw new RuntimeException("New password must be at least 6 characters");
-        }
-        
-        // Update password
+        // Update password (validation already done by @Valid on ChangePasswordRequest)
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
     }

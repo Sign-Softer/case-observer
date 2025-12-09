@@ -47,13 +47,23 @@ class ApiClient {
       if (!response.ok) {
         let errorMessage = `Request failed: ${response.statusText}`;
         
-        if (isJson) {
-          try {
-            const errorData = await response.json();
-            errorMessage = errorData.message || errorData || errorMessage;
-          } catch {
-            // If JSON parsing fails, use default message
+        try {
+          // Read response body as text first (can only read once)
+          const responseText = await response.text();
+          
+          if (responseText) {
+            // Try to parse as JSON first (backend returns JSON errors)
+            try {
+              const errorData = JSON.parse(responseText);
+              errorMessage = errorData.message || (typeof errorData === 'string' ? errorData : errorMessage);
+            } catch {
+              // If JSON parsing fails, use text as-is (fallback for plain text errors)
+              errorMessage = responseText;
+            }
           }
+        } catch (readError) {
+          // If reading response fails, use default message
+          console.error('Failed to read error response:', readError);
         }
 
         const error: ApiError = {
@@ -78,11 +88,12 @@ class ApiClient {
 
       return await response.json();
     } catch (error) {
-      if (error instanceof Error && 'status' in error) {
+      // If it's already an ApiError (has status property), re-throw it
+      if (error && typeof error === 'object' && 'status' in error) {
         throw error;
       }
       
-      // Network or other errors
+      // Network or other errors (fetch failures, etc.)
       throw {
         message: error instanceof Error ? error.message : 'Network error',
         status: 0,

@@ -76,7 +76,7 @@ class MonitoringIntegrationTest {
         // Setup test user
         testUser = new User();
         testUser.setId(1L);
-        testUser.setUsername("lawyer1");
+        testUser.setUsername("lawyer12");
         testUser.setEmail("lawyer1@example.com");
 
         // Setup test user case

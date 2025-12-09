@@ -48,9 +48,216 @@ class AuthControllerTest {
 
         String request = """
                 {
-                    "username": "lawyer1",
+                    "username": "lawyer12",
                     "email": "lawyer@example.com",
-                    "password": "password123"
+                    "password": "ValidPass123!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("registered"));
+    }
+
+    @Test
+    void register_returns400_whenPasswordTooShort() throws Exception {
+        String request = """
+                {
+                    "username": "lawyer12",
+                    "email": "lawyer@example.com",
+                    "password": "Pass1!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Password must be at least 8 characters long"));
+    }
+
+    @Test
+    void register_returns400_whenPasswordMissingLowercase() throws Exception {
+        String request = """
+                {
+                    "username": "lawyer12",
+                    "email": "lawyer@example.com",
+                    "password": "PASSWORD123!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&)"));
+    }
+
+    @Test
+    void register_returns400_whenPasswordMissingUppercase() throws Exception {
+        String request = """
+                {
+                    "username": "lawyer12",
+                    "email": "lawyer@example.com",
+                    "password": "password123!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&)"));
+    }
+
+    @Test
+    void register_returns400_whenPasswordMissingDigit() throws Exception {
+        String request = """
+                {
+                    "username": "lawyer12",
+                    "email": "lawyer@example.com",
+                    "password": "Password!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&)"));
+    }
+
+    @Test
+    void register_returns400_whenPasswordMissingSpecialCharacter() throws Exception {
+        String request = """
+                {
+                    "username": "lawyer12",
+                    "email": "lawyer@example.com",
+                    "password": "Password123"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&)"));
+    }
+
+    @Test
+    void register_returns400_whenUsernameTooShort() throws Exception {
+        String request = """
+                {
+                    "username": "abcdefg",
+                    "email": "lawyer@example.com",
+                    "password": "ValidPass123!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Username must be between 8 and 50 characters"));
+    }
+
+    @Test
+    void register_returns400_whenUsernameTooLong() throws Exception {
+        String longUsername = "a".repeat(51);
+        String request = String.format("""
+                {
+                    "username": "%s",
+                    "email": "lawyer@example.com",
+                    "password": "ValidPass123!"
+                }
+                """, longUsername);
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Username must be between 8 and 50 characters"));
+    }
+
+    @Test
+    void register_returns400_whenUsernameContainsInvalidCharacters() throws Exception {
+        String request = """
+                {
+                    "username": "user@name",
+                    "email": "lawyer@example.com",
+                    "password": "ValidPass123!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Username must contain only letters, numbers, underscores, or hyphens"));
+    }
+
+    @Test
+    void register_returns400_whenEmailInvalid() throws Exception {
+        String request = """
+                {
+                    "username": "lawyer12",
+                    "email": "invalid-email",
+                    "password": "ValidPass123!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("Email must be a valid email address"));
+    }
+
+    @Test
+    void register_returns200_whenPasswordMeetsAllRequirements() throws Exception {
+        when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordEncoder.encode(any())).thenReturn("hashed");
+
+        String request = """
+                {
+                    "username": "lawyer12",
+                    "email": "lawyer@example.com",
+                    "password": "ValidPass123!"
+                }
+                """;
+
+        mockMvc.perform(MockMvcRequestBuilders.post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(request))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message").value("registered"));
+    }
+
+    @Test
+    void register_returns200_whenAllValidationsPass() throws Exception {
+        when(userRepository.findByUsername(any())).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(any())).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordEncoder.encode(any())).thenReturn("hashed");
+
+        String request = """
+                {
+                    "username": "validuser12",
+                    "email": "valid@example.com",
+                    "password": "ValidPass123!"
                 }
                 """;
 
@@ -64,14 +271,14 @@ class AuthControllerTest {
     @Test
     void register_returns400_whenUsernameExists() throws Exception {
         User existing = new User();
-        existing.setUsername("lawyer1");
-        when(userRepository.findByUsername("lawyer1")).thenReturn(Optional.of(existing));
+        existing.setUsername("lawyer12");
+        when(userRepository.findByUsername("lawyer12")).thenReturn(Optional.of(existing));
 
         String request = """
                 {
-                    "username": "lawyer1",
+                    "username": "lawyer12",
                     "email": "lawyer@example.com",
-                    "password": "password123"
+                    "password": "ValidPass123!"
                 }
                 """;
 
@@ -85,19 +292,19 @@ class AuthControllerTest {
     @Test
     void login_returns200_withTokens_onValidCredentials() throws Exception {
         User user = new User();
-        user.setUsername("lawyer1");
+        user.setUsername("lawyer12");
         user.setPassword("hashed");
         user.setRole(User.Role.USER);
 
-        when(userRepository.findByUsername("lawyer1")).thenReturn(Optional.of(user));
-        when(passwordEncoder.matches("password123", "hashed")).thenReturn(true);
-        when(jwtService.generateAccessToken("lawyer1", "USER")).thenReturn("access-token");
-        when(jwtService.generateRefreshToken("lawyer1", "USER")).thenReturn("refresh-token");
+        when(userRepository.findByUsername("lawyer12")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("ValidPass123!", "hashed")).thenReturn(true);
+        when(jwtService.generateAccessToken("lawyer12", "USER")).thenReturn("access-token");
+        when(jwtService.generateRefreshToken("lawyer12", "USER")).thenReturn("refresh-token");
 
         String request = """
                 {
-                    "username": "lawyer1",
-                    "password": "password123"
+                    "username": "lawyer12",
+                    "password": "ValidPass123!"
                 }
                 """;
 
@@ -116,7 +323,7 @@ class AuthControllerTest {
 
         String request = """
                 {
-                    "username": "lawyer1",
+                    "username": "lawyer12",
                     "password": "wrong"
                 }
                 """;
@@ -131,12 +338,12 @@ class AuthControllerTest {
     void refresh_returns200_withNewAccessToken() throws Exception {
         // Create a mock Claims object using Mockito
         io.jsonwebtoken.Claims mockClaims = org.mockito.Mockito.mock(io.jsonwebtoken.Claims.class);
-        when(mockClaims.getSubject()).thenReturn("lawyer1");
+        when(mockClaims.getSubject()).thenReturn("lawyer12");
         when(mockClaims.get("typ", String.class)).thenReturn("refresh");
         when(mockClaims.get("role", String.class)).thenReturn("USER");
         
         when(jwtService.parse("refresh-token")).thenReturn(mockClaims);
-        when(jwtService.generateAccessToken("lawyer1", "USER")).thenReturn("new-access-token");
+        when(jwtService.generateAccessToken("lawyer12", "USER")).thenReturn("new-access-token");
 
         String request = """
                 {

@@ -1,7 +1,10 @@
 package ro.signsofter.caseobserver.controller;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -73,7 +76,26 @@ public class AuthController {
     }
 
     public record LoginRequest(@NotBlank String username, @NotBlank String password) {}
-    public record RegisterRequest(@NotBlank String username, @NotBlank String email, @NotBlank String password) {}
+    
+    public record RegisterRequest(
+            @NotBlank 
+            @Size(min=8, max=50, message="Username must be between 8 and 50 characters") 
+            @Pattern(regexp="^[a-zA-Z0-9_-]+$", message="Username must contain only letters, numbers, underscores, or hyphens") 
+            String username,
+            
+            @NotBlank 
+            @Email(message="Email must be a valid email address") 
+            String email,
+            
+            @NotBlank 
+            @Size(min=8, message="Password must be at least 8 characters long") 
+            @Pattern(
+                regexp="^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&#]{8,}$",
+                message="Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character (@$!%*?&)"
+            ) 
+            String password
+    ) {}
+    
     public record RefreshRequest(@NotBlank String refreshToken) {}
 }
 

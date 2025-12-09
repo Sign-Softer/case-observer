@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { usersApi } from '../../../lib/api/users';
+import { usersApi } from '@/lib/api/users';
+import { PASSWORD_REQUIREMENTS } from '@/lib/validation/password';
 import Button from '../common/Button';
 import Input from '../common/Input';
+import Tooltip from '../common/Tooltip';
 
 export default function PasswordChangeForm() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -20,13 +22,7 @@ export default function PasswordChangeForm() {
     setError(null);
     setSuccess(false);
 
-    // Validation
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters');
-      setLoading(false);
-      return;
-    }
-
+    // Only check confirm password match and different from current (backend handles password validation)
     if (newPassword !== confirmPassword) {
       setError('New passwords do not match');
       setLoading(false);
@@ -75,19 +71,46 @@ export default function PasswordChangeForm() {
       </div>
 
       <div>
-        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
-          New Password
-        </label>
+        <div className="flex items-center gap-2 mb-1">
+          <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
+            New Password
+          </label>
+          <Tooltip
+            content={
+              <div>
+                <p className="font-medium mb-1">Password requirements:</p>
+                <ul className="list-disc list-inside space-y-0.5">
+                  {PASSWORD_REQUIREMENTS.map((req, idx) => (
+                    <li key={idx}>{req}</li>
+                  ))}
+                </ul>
+              </div>
+            }
+          >
+            <button
+              type="button"
+              className="text-gray-400 hover:text-gray-600 focus:outline-none"
+              aria-label="Password requirements"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </Tooltip>
+        </div>
         <Input
           id="newPassword"
           type={showPasswords ? 'text' : 'password'}
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           required
-          placeholder="Enter new password (min 6 characters)"
-          minLength={6}
+          placeholder="Enter new password"
+          minLength={8}
         />
-        <p className="text-xs text-gray-500 mt-1">Must be at least 6 characters</p>
       </div>
 
       <div>
