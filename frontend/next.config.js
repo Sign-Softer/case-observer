@@ -2,11 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   
-  // Proxy backend requests when accessed directly (not through nginx)
-  // This allows the app to work when accessed on localhost:3000
+  // Next.js rewrites handle server-side requests (SSR, API routes)
+  // Client-side requests use NEXT_PUBLIC_API_URL to go through nginx
+  // This allows both server-side and client-side requests to work correctly
   async rewrites() {
-    // Backend URL - use host.docker.internal when running in Docker,
-    // or localhost when running locally
+    // Backend URL for server-side requests (from inside Docker container)
     const backendUrl = process.env.BACKEND_URL || 'http://host.docker.internal:8080';
     
     return [

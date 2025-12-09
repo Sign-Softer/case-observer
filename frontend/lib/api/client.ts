@@ -10,8 +10,9 @@ class ApiClient {
   private baseUrl: string;
 
   constructor() {
-    // Use relative URLs - they'll be proxied by Next.js or nginx
-    this.baseUrl = '';
+    // When NEXT_PUBLIC_API_URL is set, use it (behind nginx)
+    // Otherwise use relative URLs (Next.js rewrites will handle it)
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
   }
 
   private async request<T>(
@@ -22,9 +23,9 @@ class ApiClient {
     
     // Add auth header if token exists
     const authHeader = tokenStorage.getAuthHeader();
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(options.headers as Record<string, string>),
     };
 
     if (authHeader) {
@@ -33,7 +34,7 @@ class ApiClient {
 
     const config: RequestInit = {
       ...options,
-      headers,
+      headers: headers as HeadersInit,
     };
 
     try {

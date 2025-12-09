@@ -42,7 +42,7 @@ services:
       dockerfile: Dockerfile.dev
     container_name: cs-node
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost/api
+      - NEXT_PUBLIC_API_URL=http://localhost
       - NODE_ENV=development
       - BACKEND_URL=http://host.docker.internal:8080  # Backend URL for Next.js rewrites
       - WATCHPACK_POLLING=true  # Enable polling for file watching in Docker
